@@ -22,6 +22,7 @@ if now.hour <= 12:
 else:
     hour = 12
 date = datetime(now.year, now.month, now.day, hour)
+datestr = date.strftime('%Iz %Y-%m-%d')
 print('{}'.format(date))
 
 # This requests the data 11035 is
@@ -35,6 +36,13 @@ Td = df['dewpoint'].values * units.degC
 wind_speed = df['speed'].values * units.knots
 wind_dir = df['direction'].values * units.degrees
 u, v = mpcalc.get_wind_components(wind_speed, wind_dir)
+
+# Calculate the LCL
+lcl_pressure, lcl_temperature = mpcalc.lcl(p[0], T[0], Td[0])
+print(lcl_pressure, lcl_temperature)
+# Calculate the parcel profile.
+parcel_prof = mpcalc.parcel_profile(p, T[0], Td[0]).to('degC')
+cape, cin = mpcalc.cape_cin(p, T, Td, parcel_prof)
 
 #############################
 # Create a new figure. The dimensions here give a good aspect ratio
@@ -62,6 +70,10 @@ skew.shade_cape(p, T, parcel_prof)
 
 # Plot a zero degree isotherm
 skew.ax.axvline(0, color='c', linestyle='--', linewidth=2)
+skew.ax.set_title('Station: '+station +'\n'+datestr) # set title
+skew.ax.set_xlabel('Temperature (C)')
+skew.ax.set_ylabel('Pressure (hPa)')
+
 
 # Add the relevant special lines
 skew.plot_dry_adiabats(linewidth=1)
@@ -76,6 +88,9 @@ ax = fig.add_subplot(gs[0, -1])
 h = Hodograph(ax, component_range=60.)
 h.add_grid(increment=20)
 h.plot_colormapped(u, v, wind_speed)  # Plot a line colored by wind speed
+
+# add another subplot for the text of the indices
+ax_t = fig.add_subplot(gs[1:,2])
 
 # Show the plot
 plt.show()
