@@ -39,7 +39,7 @@ query.time(now)
 query.variables('air_temperature', 'dew_point_temperature', 'wind_speed',
                 'precipitation_amount_hourly', 'inches_ALTIM',
                 'air_pressure_at_sea_level', 'wind_from_direction','cloud_area_fraction','weather','report')
-query.accept('netcdf4')
+query.accept('csv')
 # Get the netcdf dataset
 data = ncss.get_data(query)
 print(list(data.variables))
