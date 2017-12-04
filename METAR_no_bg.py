@@ -23,7 +23,7 @@ from owslib.wmts import WebMapTileService
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/ncdecoded/files/Surface_METAR_20171130_0000.nc
 # )
 
-def build_query(west=-5.5,east=32,south=42,north=72):
+def build_query(west=-58.5,east=32,south=42,north=74):
     metar = TDSCatalog('http://thredds.ucar.edu/thredds/catalog/nws/metar/ncdecoded/catalog.xml')
     dataset = list(metar.datasets.values())[0]
     print(list(dataset.access_urls))
@@ -70,8 +70,13 @@ def get_data(ncss,query,density=50000.):
 
     return df
 
-def reduce_density(df,dens):
-    proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
+def reduce_density(df,dens,projection='EU'):
+
+    if projection == 'GR':
+        proj = ccrs.LambertConformal(central_longitude=-35, central_latitude=65,
+                                    standard_parallels=[35])
+    else:
+        proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
                                  standard_parallels=[35])
     # Use the cartopy map projection to transform station locations to the map and
     # then refine the number of stations plotted by setting a 300km radius
@@ -80,7 +85,7 @@ def reduce_density(df,dens):
 
     return proj,point_locs,df
 
-def plot_map_standard(proj,point_locs,df,area='EU',west=-5.5,east=32,south=42,north=62):
+def plot_map_standard(proj,point_locs,df,area='EU',west=-5.5,east=32,south=42,north=62, fonts=18):
     # Map weather strings to WMO codes, which we can use to convert to symbols
     # Only use the first symbol if there are multiple
     df['weather'] = df['weather'].replace('-SG','SG')
@@ -101,46 +106,57 @@ def plot_map_standard(proj,point_locs,df,area='EU',west=-5.5,east=32,south=42,no
     # # Set up a cartopy feature for state borders.
     state_boundaries = feat.NaturalEarthFeature(category='cultural',
                                                  name='admin_0_countries',
-                                                scale='10m', facecolor='none')
-    ax.coastlines(resolution='10m', zorder=2, color='black')
-    ax.add_feature(state_boundaries, zorder=2, edgecolor='black')
+                                                scale='10m', facecolor='#d8dcd6',alpha=0.5)
+    ax.coastlines(resolution='10m', zorder=1, color='black')
+    ax.add_feature(state_boundaries, zorder=1, edgecolor='black')
+    # ax.add_feature(cartopy.feature.OCEAN, zorder=0)
     # Set plot bounds
     ax.set_extent((west, east, south, north))
     # Start the station plot by specifying the axes to draw on, as well as the
     # lon/lat of the stations (with transform). We also the fontsize to 12 pt.
     stationplot = StationPlot(ax, df['longitude'].values, df['latitude'].values, clip_on=True,
-                              transform=ccrs.PlateCarree(), fontsize=16)
+                              transform=ccrs.PlateCarree(), fontsize=fonts)
     # Plot the temperature and dew point to the upper and lower left, respectively, of
     # the center point. Each one uses a different color.
-    stationplot.plot_parameter('NW', df['air_temperature'],color='red',fontweight='bold')
+    stationplot.plot_parameter('NW', df['air_temperature'],color='#960056',fontweight='bold',zorder=2000)
     stationplot.plot_parameter('SW', df['dew_point_temperature'],
-                               color='darkgreen')
+                               color='#0b8b87',fontweight='bold')
     # A more complex example uses a custom formatter to control how the sea-level pressure
     # values are plotted. This uses the standard trailing 3-digits of the pressure value
     # in tenths of millibars.
-    stationplot.plot_parameter('NE', df['hectoPascal_ALTIM'], formatter=lambda v: format(10 * v, '.0f')[-3:])
+    stationplot.plot_parameter('NE', df['hectoPascal_ALTIM'], formatter=lambda v: format(10 * v, '.0f')[-3:],color="#2c6fbb")
     # Plot the cloud cover symbols in the center location. This uses the codes made above and
     # uses the `sky_cover` mapper to convert these values to font codes for the
     # weather symbol font.
     stationplot.plot_symbol('C', cloud_frac, sky_cover)
     # Same this time, but plot current weather to the left of center, using the
     # `current_weather` mapper to convert symbols to the right glyphs.
-    stationplot.plot_symbol('W', wx, current_weather)
+    stationplot.plot_symbol('W', wx, current_weather,fontsize=20)
     # Add wind barbs
-    stationplot.plot_barb(u, v)
+    stationplot.plot_barb(u, v,zorder=1000,linewidth=2)
     # Also plot the actual text of the station id. Instead of cardinal directions,
     # plot further out by specifying a location of 2 increments in x and 0 in y.
     # stationplot.plot_text((2, 0), df['station'])
-    plt.savefig('/home/sh16450/Desktop/Metar_plots/CURR_METAR_'+area+'.png')
+    plt.savefig('/home/sh16450/Desktop/Metar_plots/CURR_METAR_'+area+'.png',bbox_inches='tight', transparent="True", pad_inches=0)
 
 if __name__ == '__main__':
     ncss, query = build_query()
     df_tot = get_data(ncss,query)
     proj,point_locs,df = reduce_density(df_tot,180000)
-    plot_map_standard(proj,point_locs,df,area='EU')
+    plot_map_standard(proj,point_locs,df,area='EU', fonts=15)
 
     proj,point_locs,df_at = reduce_density(df_tot,20000)
     plot_map_standard(proj,point_locs,df_at,area='AT',west=8.9,east=17.42,south=45.9,north=49.4)
 
+    proj,point_locs,df_at = reduce_density(df_tot,90000)
+    plot_map_standard(proj,point_locs,df_at,area='UK',west=-10.1,east=9.4,south=48.64,north=58.4, fonts=16)
+
+    proj,point_locs,df_at = reduce_density(df_tot,80000)
+    plot_map_standard(proj,point_locs,df_at,area='SCANDI_S',west=1,east=32.7,south=54,north=64.5)
+
     proj,point_locs,df_at = reduce_density(df_tot,70000)
-    plot_map_standard(proj,point_locs,df_at,area='UK',west=-10.1,east=9.4,south=48.64,north=58.4)
+    plot_map_standard(proj,point_locs,df_at,area='SCANDI_N',west=8,east=39.7,south=64,north=72)
+
+    proj,point_locs,df_at = reduce_density(df_tot,50000,'GR')
+    plot_map_standard(proj,point_locs,df_at,area='GR_ICE',west=-58,east=-12,south=57,north=70.5, fonts=22)
+    plt.close('all')
