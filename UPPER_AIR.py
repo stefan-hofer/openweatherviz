@@ -50,7 +50,12 @@ def plot_upper_air(station,date=False):
     Td = df['dewpoint'].values * units.degC
     wind_speed = df['speed'].values * units.knots
     wind_dir = df['direction'].values * units.degrees
+
+    wind_speed_6k = df['speed'][df.height <= 6000].values* units.knots
+    wind_dir_6k = df['direction'][df.height <= 6000].values* units.degrees
+
     u, v = mpcalc.get_wind_components(wind_speed, wind_dir)
+    u6, v6 = mpcalc.get_wind_components(wind_speed_6k, wind_dir_6k)
 
     # Calculate the LCL
     lcl_pressure, lcl_temperature = mpcalc.lcl(p[0], T[0], Td[0])
@@ -63,7 +68,7 @@ def plot_upper_air(station,date=False):
     # Create a new figure. The dimensions here give a good aspect ratio
     fig = plt.figure(figsize=(9, 9))
     gs = gridspec.GridSpec(3, 3)
-    skew = SkewT(fig, rotation=40,subplot=gs[:, :2])
+    skew = SkewT(fig, rotation=45,subplot=gs[:, :2])
 
     # Plot the data using normal plotting functions, in this case using
     # log scaling in Y, as dictated by the typical meteorological plot
@@ -91,9 +96,9 @@ def plot_upper_air(station,date=False):
 
 
     # Add the relevant special lines
-    skew.plot_dry_adiabats(linewidth=1)
-    skew.plot_moist_adiabats(linewidth=1)
-    skew.plot_mixing_lines(linewidth=1)
+    skew.plot_dry_adiabats(linewidth=0.7)
+    skew.plot_moist_adiabats(linewidth=0.7)
+    skew.plot_mixing_lines(linewidth=0.7)
 
     # Create a hodograph
     # Create an inset axes object that is 40% width and height of the
@@ -102,10 +107,16 @@ def plot_upper_air(station,date=False):
     ax = fig.add_subplot(gs[0, -1])
     h = Hodograph(ax, component_range=60.)
     h.add_grid(increment=20)
-    h.plot_colormapped(u, v, wind_speed)  # Plot a line colored by wind speed
+    h.plot_colormapped(u6, v6, wind_speed_6k)  # Plot a line colored by wind speed
 
     # add another subplot for the text of the indices
-    ax_t = fig.add_subplot(gs[1:,2])
+    # ax_t = fig.add_subplot(gs[1:,2])
+    skew2 = SkewT(fig, rotation=45,subplot=gs[1:,2])
+    skew2.plot(p, T, 'r')
+    skew2.plot(p, Td, 'g')
+    skew2.plot_barbs(p, u, v)
+    skew2.ax.set_ylim(1000, 950)
+    skew2.ax.set_xlim(-20, 20)
 
     # Show the plot
     plt.show()
