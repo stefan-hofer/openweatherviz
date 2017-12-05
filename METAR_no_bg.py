@@ -85,11 +85,12 @@ def reduce_density(df,dens,projection='EU'):
 
     return proj,point_locs,df
 
-def plot_map_standard(proj,point_locs,df,area='EU',west=-5.5,east=32,south=42,north=62, fonts=18):
+def plot_map_standard(proj,point_locs,df_t,area='EU',west=-5.5,east=32,south=42,north=62, fonts=18):
     # Map weather strings to WMO codes, which we can use to convert to symbols
     # Only use the first symbol if there are multiple
-    df['weather'] = df['weather'].replace('-SG','SG')
-    df['weather'] = df['weather'].replace('FZBR','FZFG')
+    df_t = df
+    df['weather'] = df['weather'].str.replace('-SG','SG')
+    df['weather'] = df['weather'].str.replace('FZBR','FZFG')
     wx = [wx_code_map[s.split()[0] if ' ' in s else s] for s in df['weather'].fillna('')]
     # Get the wind components, converting from m/s to knots as will be appropriate
     # for the station plot.
@@ -145,18 +146,18 @@ if __name__ == '__main__':
     proj,point_locs,df = reduce_density(df_tot,180000)
     plot_map_standard(proj,point_locs,df,area='EU', fonts=15)
 
-    proj,point_locs,df_at = reduce_density(df_tot,20000)
-    plot_map_standard(proj,point_locs,df_at,area='AT',west=8.9,east=17.42,south=45.9,north=49.4)
+    proj,point_locs,df = reduce_density(df_tot,20000)
+    plot_map_standard(proj,point_locs,df,area='AT',west=8.9,east=17.42,south=45.9,north=49.4)
 
-    proj,point_locs,df_at = reduce_density(df_tot,90000)
-    plot_map_standard(proj,point_locs,df_at,area='UK',west=-10.1,east=9.4,south=48.64,north=58.4, fonts=16)
+    proj,point_locs,df = reduce_density(df_tot,90000)
+    plot_map_standard(proj,point_locs,df,area='UK',west=-10.1,east=9.4,south=48.64,north=58.4, fonts=16)
 
-    proj,point_locs,df_at = reduce_density(df_tot,80000)
-    plot_map_standard(proj,point_locs,df_at,area='SCANDI_S',west=1,east=32.7,south=54,north=64.5)
+    proj,point_locs,df = reduce_density(df_tot,80000)
+    plot_map_standard(proj,point_locs,df,area='SCANDI_S',west=1,east=32.7,south=54,north=64.5)
 
-    proj,point_locs,df_at = reduce_density(df_tot,70000)
-    plot_map_standard(proj,point_locs,df_at,area='SCANDI_N',west=8,east=39.7,south=64,north=72)
+    proj,point_locs,df = reduce_density(df_tot,70000)
+    plot_map_standard(proj,point_locs,df,area='SCANDI_N',west=8,east=39.7,south=64,north=72)
 
-    proj,point_locs,df_at = reduce_density(df_tot,50000,'GR')
-    plot_map_standard(proj,point_locs,df_at,area='GR_ICE',west=-58,east=-12,south=57,north=70.5, fonts=22)
+    proj,point_locs,df = reduce_density(df_tot,50000,'GR')
+    plot_map_standard(proj,point_locs,df,area='GR_ICE',west=-58,east=-12,south=57,north=70.5, fonts=22)
     plt.close('all')
