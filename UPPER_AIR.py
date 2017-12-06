@@ -11,7 +11,7 @@ from siphon.ncss import NCSS
 from siphon.simplewebservice.wyoming import WyomingUpperAir
 import seaborn as sns
 
-def plot_upper_air(station,date=False):
+def plot_upper_air(station=11035,date=False):
 # sns.set(rc={'axes.facecolor':'#343837', 'figure.facecolor':'#343837',
 #  'grid.linestyle':'','axes.labelcolor':'#04d8b2','text.color':'#04d8b2',
 #  'xtick.color':'#04d8b2','ytick.color':'#04d8b2'})
@@ -120,3 +120,6 @@ def plot_upper_air(station,date=False):
 
     # Show the plot
     plt.show()
+
+if __name__ == '__main__':
+    plot_upper_air()
