@@ -8,7 +8,6 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 from apiclient.http import MediaFileUpload
-from apiclient.discovery import build
 
 try:
     import argparse
@@ -46,10 +45,11 @@ def get_credentials():
         flow.user_agent = APPLICATION_NAME
         if flags:
             credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
+        else:  # Needed only for compatibility with Python 2.6
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
+
 
 def main():
     """Shows basic usage of the Google Drive API.
@@ -62,7 +62,7 @@ def main():
     service = discovery.build('drive', 'v3', http=http)
 
     results = service.files().list(
-        pageSize=10,fields="nextPageToken, files(id, name)").execute()
+        pageSize=10, fields="nextPageToken, files(id, name)").execute()
     items = results.get('files', [])
     if not items:
         print('No files found.')
@@ -71,7 +71,21 @@ def main():
         for item in items:
             print('{0} ({1})'.format(item['name'], item['id']))
 
-def upload_a_file(path,filename):
+
+def create_folder(foldername):
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    service = discovery.build('drive', 'v3', http=http)
+    file_metadata = {
+                    'name': 'Invoices',
+                    'mimeType': 'application/vnd.google-apps.folder'}
+    file = service.files().create(body=file_metadata,
+                                  fields='id').execute()
+
+    print('Folder ID: {}'.format(file.get('id')))
+
+
+def upload_a_file(path, filename):
     """Shows basic usage of the Google Drive API.
 
     Creates a Google Drive API service object and outputs the names and IDs
@@ -81,18 +95,15 @@ def upload_a_file(path,filename):
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('drive', 'v3', http=http)
 
-    file_metadata = {'name':filename}
+    file_metadata = {'name': filename}
     media = MediaFileUpload(path,
-                             mimetype='text/plain')
-
+                            mimetype='text/plain')
 
     file = service.files().create(body=file_metadata,
-                                    media_body=media,
-                                    fields='id').execute()
+                                  media_body=media,
+                                  fields='id').execute()
 
     print('File ID: {}'.format(file.get('id')))
-
-
 
 
 if __name__ == '__main__':

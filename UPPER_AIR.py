@@ -1,22 +1,26 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import matplotlib.gridspec as gridspec
-from matplotlib.dates import AutoDateLocator, DateFormatter
 import matplotlib.pyplot as plt
 import metpy.calc as mpcalc
 from metpy.units import units
-from metpy.cbook import get_test_data
 from metpy.plots import Hodograph, SkewT
-from siphon.catalog import TDSCatalog
-from siphon.ncss import NCSS
 from siphon.simplewebservice.wyoming import WyomingUpperAir
 import seaborn as sns
 
-def plot_upper_air(station=11035,date=False):
-# sns.set(rc={'axes.facecolor':'#343837', 'figure.facecolor':'#343837',
-#  'grid.linestyle':'','axes.labelcolor':'#04d8b2','text.color':'#04d8b2',
-#  'xtick.color':'#04d8b2','ytick.color':'#04d8b2'})
-# Get time in UTC
-    if date==False:
+
+def plot_upper_air(station=11035, date=False):
+    '''
+    -----------------------------
+    Default use of plot_upper_air:
+
+    This will plot a SkewT sounding for station '11035' (Wien Hohe Warte)
+    plot_upper_air(station=11035, date=False)
+    '''
+    # sns.set(rc={'axes.facecolor':'#343837', 'figure.facecolor':'#343837',
+    #  'grid.linestyle':'','axes.labelcolor':'#04d8b2','text.color':'#04d8b2',
+    #  'xtick.color':'#04d8b2','ytick.color':'#04d8b2'})
+    # Get time in UTC
+    if date is False:
         now = datetime.utcnow()
         # If morning then 0z sounding, otherwise 12z
         if now.hour <= 12:
@@ -29,7 +33,7 @@ def plot_upper_air(station=11035,date=False):
     else:
         year = int(input('Please specify the year: '))
         month = int(input('Please specify the month: '))
-        day  = int(input('Please specify the day: '))
+        day = int(input('Please specify the day: '))
         hour = int(input('Please specify the hour: '))
         if hour <= 12:
             hour = 0
@@ -38,8 +42,6 @@ def plot_upper_air(station=11035,date=False):
         date = datetime(year, month, day, hour)
         datestr = date.strftime('%Iz %Y-%m-%d')
         print('You entered {}'.format(date))
-
-
 
     # This requests the data 11035 is
     df = WyomingUpperAir.request_data(date, station)
@@ -51,8 +53,8 @@ def plot_upper_air(station=11035,date=False):
     wind_speed = df['speed'].values * units.knots
     wind_dir = df['direction'].values * units.degrees
 
-    wind_speed_6k = df['speed'][df.height <= 6000].values* units.knots
-    wind_dir_6k = df['direction'][df.height <= 6000].values* units.degrees
+    wind_speed_6k = df['speed'][df.height <= 6000].values * units.knots
+    wind_dir_6k = df['direction'][df.height <= 6000].values * units.degrees
 
     u, v = mpcalc.get_wind_components(wind_speed, wind_dir)
     u6, v6 = mpcalc.get_wind_components(wind_speed_6k, wind_dir_6k)
@@ -68,7 +70,7 @@ def plot_upper_air(station=11035,date=False):
     # Create a new figure. The dimensions here give a good aspect ratio
     fig = plt.figure(figsize=(9, 9))
     gs = gridspec.GridSpec(3, 3)
-    skew = SkewT(fig, rotation=45,subplot=gs[:, :2])
+    skew = SkewT(fig, rotation=45, subplot=gs[:, :2])
 
     # Plot the data using normal plotting functions, in this case using
     # log scaling in Y, as dictated by the typical meteorological plot
@@ -90,10 +92,9 @@ def plot_upper_air(station=11035,date=False):
 
     # Plot a zero degree isotherm
     skew.ax.axvline(0, color='c', linestyle='--', linewidth=2)
-    skew.ax.set_title('Station: '+str(station) +'\n'+datestr) # set title
+    skew.ax.set_title('Station: '+str(station) + '\n'+datestr)  # set title
     skew.ax.set_xlabel('Temperature (C)')
     skew.ax.set_ylabel('Pressure (hPa)')
-
 
     # Add the relevant special lines
     skew.plot_dry_adiabats(linewidth=0.7)
@@ -107,19 +108,21 @@ def plot_upper_air(station=11035,date=False):
     ax = fig.add_subplot(gs[0, -1])
     h = Hodograph(ax, component_range=60.)
     h.add_grid(increment=20)
-    h.plot_colormapped(u6, v6, wind_speed_6k)  # Plot a line colored by wind speed
+    # Plot a line colored by windspeed
+    h.plot_colormapped(u6, v6, wind_speed_6k)
 
     # add another subplot for the text of the indices
     # ax_t = fig.add_subplot(gs[1:,2])
-    skew2 = SkewT(fig, rotation=45,subplot=gs[1:,2])
+    skew2 = SkewT(fig, rotation=0, subplot=gs[1:, 2])
     skew2.plot(p, T, 'r')
     skew2.plot(p, Td, 'g')
-    skew2.plot_barbs(p, u, v)
-    skew2.ax.set_ylim(1000, 950)
-    skew2.ax.set_xlim(-20, 20)
+    # skew2.plot_barbs(p, u, v)
+    skew2.ax.set_ylim(1000, 700)
+    skew2.ax.set_xlim(-30, 10)
 
     # Show the plot
     plt.show()
+
 
 if __name__ == '__main__':
     plot_upper_air()
