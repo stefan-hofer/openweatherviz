@@ -15,6 +15,7 @@ the left, with the MODIS false color 'snow RGB' shown on the right.
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as PathEffects
 import cartopy.crs as ccrs
+import cartopy.feature as feat
 from owslib.wmts import WebMapTileService
 
 
@@ -27,13 +28,13 @@ def main():
     layers = ['MODIS_Terra_SurfaceReflectance_Bands143',
               'MODIS_Terra_CorrectedReflectance_Bands367']
 
-    date_str = '2017-12-01'
+    date_str = '2017-12-07'
 
     # Plot setup
     plot_CRS = ccrs.Mercator()
     geodetic_CRS = ccrs.Geodetic()
-    x0, y0 = plot_CRS.transform_point(-5.5, 42.1, geodetic_CRS)
-    x1, y1 = plot_CRS.transform_point(32.5, 52.4, geodetic_CRS)
+    x0, y0 = plot_CRS.transform_point(3.7, 43.9, geodetic_CRS)
+    x1, y1 = plot_CRS.transform_point(22.5, 50.8, geodetic_CRS)
     ysize = 8
     xsize = 2 * ysize * (x1 - x0) / (y1 - y0)
     fig = plt.figure(figsize=(xsize, ysize), dpi=100)
@@ -47,6 +48,12 @@ def main():
                        color='wheat', transform=geodetic_CRS)
         txt.set_path_effects([PathEffects.withStroke(linewidth=5,
                                                      foreground='black')])
+        state_boundaries = feat.NaturalEarthFeature(category='cultural',
+                                                    name='admin_0_countries',
+                                                    scale='10m',
+                                                    facecolor='none')
+        ax.coastlines(resolution='10m', zorder=1, color='black')
+        ax.add_feature(state_boundaries, zorder=1, edgecolor='black')
     plt.show()
 
 
@@ -58,21 +65,19 @@ def main_vis():
     # Layers for MODIS true color and snow RGB
     layers = ['MODIS_Terra_SurfaceReflectance_Bands143']
     # 'MODIS_Terra_CorrectedReflectance_Bands367'
-    date_str = '2017-12-01'
+    date_str = '2017-12-07'
 
     # Plot setup
-    plot_CRS = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
+    plot_CRS = ccrs.LambertConformal(central_longitude=13, central_latitude=46,
                                      standard_parallels=[35])
     geodetic_CRS = ccrs.Geodetic()
-    x0, y0 = plot_CRS.transform_point(-5.5, 42.1, geodetic_CRS)
-    x1, y1 = plot_CRS.transform_point(32.5, 52.4, geodetic_CRS)
-    fig = plt.figure(figsize=(20, 8), dpi=100)
+    x0, y0 = plot_CRS.transform_point(3.7, 43.9, geodetic_CRS)
+    x1, y1 = plot_CRS.transform_point(22.5, 50.8, geodetic_CRS)
 
     ax = plt.axes(projection=plot_CRS)
     ax.set_xlim((x0, x1))
     ax.set_ylim((y0, y1))
-    ax.add_wmts(wmts, layers, wmts_kwargs={'time': date_str,
-                                           'bbox': [-6, 40, 35, 55]})
+    ax.add_wmts(wmts, layers[0], wmts_kwargs={'time': date_str})
 
 
 if __name__ == '__main__':

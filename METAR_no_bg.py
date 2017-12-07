@@ -28,7 +28,7 @@ def build_query(west=-58.5, east=32, south=42, north=74):
 
     # get current date and time
     now = datetime.utcnow()
-    now = datetime(now.year, now.month, now.day, 13)
+    now = datetime(now.year, now.month, now.day, now.hour)
 
     # build the query
     query = ncss.query()

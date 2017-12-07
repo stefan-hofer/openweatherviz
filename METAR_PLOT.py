@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from netCDF4 import Dataset, chartostring
+from netCDF4 import chartostring
 
 from matplotlib.dates import AutoDateLocator, DateFormatter
 import matplotlib.pyplot as plt
