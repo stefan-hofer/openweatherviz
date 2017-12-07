@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as PathEffects
 import cartopy.crs as ccrs
 from owslib.wmts import WebMapTileService
-import cartopy.feature as feat
 
 
 def main():
@@ -50,6 +49,7 @@ def main():
                                                      foreground='black')])
     plt.show()
 
+
 def main_vis():
     # URL of NASA GIBS
     URL = 'http://gibs.earthdata.nasa.gov/wmts/epsg4326/best/wmts.cgi'
@@ -57,12 +57,12 @@ def main_vis():
 
     # Layers for MODIS true color and snow RGB
     layers = ['MODIS_Terra_SurfaceReflectance_Bands143']
-    #'MODIS_Terra_CorrectedReflectance_Bands367'
+    # 'MODIS_Terra_CorrectedReflectance_Bands367'
     date_str = '2017-12-01'
 
     # Plot setup
     plot_CRS = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
-                                 standard_parallels=[35])
+                                     standard_parallels=[35])
     geodetic_CRS = ccrs.Geodetic()
     x0, y0 = plot_CRS.transform_point(-5.5, 42.1, geodetic_CRS)
     x1, y1 = plot_CRS.transform_point(32.5, 52.4, geodetic_CRS)
@@ -71,9 +71,8 @@ def main_vis():
     ax = plt.axes(projection=plot_CRS)
     ax.set_xlim((x0, x1))
     ax.set_ylim((y0, y1))
-    ax.add_wmts(wmts, layers, wmts_kwargs={'time': date_str, 'bbox':[-6,40,35,55] })
-
-
+    ax.add_wmts(wmts, layers, wmts_kwargs={'time': date_str,
+                                           'bbox': [-6, 40, 35, 55]})
 
 
 if __name__ == '__main__':

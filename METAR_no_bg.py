@@ -28,7 +28,7 @@ def build_query(west=-58.5, east=32, south=42, north=74):
 
     # get current date and time
     now = datetime.utcnow()
-    now = datetime(now.year, now.month, now.day, now.hour)
+    now = datetime(now.year, now.month, now.day, 13)
 
     # build the query
     query = ncss.query()
@@ -43,10 +43,20 @@ def build_query(west=-58.5, east=32, south=42, north=74):
 
 
 def get_data(ncss, query, density=50000.):
-    # Get the netcdf dataset
-    data = ncss.get_data(query)
-    # convert into pandas dataframe
-    df = pd.DataFrame(data)
+    attempts = 0
+    success = False
+    while attempts <= 5 and not success:
+        try:
+            # Get the netcdf dataset
+            data = ncss.get_data(query)
+            # convert into pandas dataframe
+            df = pd.DataFrame(data)
+            success = True
+        except ValueError:
+            attempts += 1
+            print('Not the right amount of columns, trying for the {} time'
+                  .format(attempts))
+
     df = df.replace(-99999, np.nan)
     df = df.dropna(how='any', subset=['wind_from_direction', 'wind_speed'])
     df['cloud_area_fraction'] = (df['cloud_area_fraction'] * 8)
@@ -86,6 +96,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Only use the first symbol if there are multiple
     df['weather'] = df['weather'].str.replace('-SG', 'SG')
     df['weather'] = df['weather'].str.replace('FZBR', 'FZFG')
+    df['weather'] = df['weather'].str.replace('-BLSN', 'BLSN')
     wx = [wx_code_map[s.split()[0] if ' ' in s else s] for s in df['weather']
           .fillna('')]
     # Get the wind components, converting from m/s to knots as will

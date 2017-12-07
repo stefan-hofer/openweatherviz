@@ -21,7 +21,6 @@ from metpy.units import units
 from owslib.wmts import WebMapTileService
 
 os.environ["CARTOPY_USER_BACKGROUNDS"] = "/home/sh16450/Documents/repos/etc/cartopy/BG"
-
 # =============================================================================
 # Setinng up the MODIS image background
 # =============================================================================
