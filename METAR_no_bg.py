@@ -92,6 +92,7 @@ def reduce_density(df, dens, projection='EU'):
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                       south=42, north=62, fonts=18):
+    df = df_t
     # Map weather strings to WMO codes, which we can use to convert to symbols
     # Only use the first symbol if there are multiple
     df['weather'] = df['weather'].str.replace('-SG', 'SG')
