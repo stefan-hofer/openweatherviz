@@ -3,6 +3,7 @@ import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as feat
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
 import pandas as pd
 from metpy.units import units
 from siphon.catalog import TDSCatalog
@@ -91,7 +92,7 @@ def reduce_density(df, dens, projection='EU'):
 
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=18):
+                      south=42, north=62, fonts=14):
     df = df_t
     # Map weather strings to WMO codes, which we can use to convert to symbols
     # Only use the first symbol if there are multiple
@@ -132,17 +133,23 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                               transform=ccrs.PlateCarree(), fontsize=fonts)
     # Plot the temperature and dew point to the upper and lower left,
     # respectively, of the center point. Each one uses a different color.
-    stationplot.plot_parameter('NW', df['air_temperature'], color='#960056',
-                               fontweight='bold', zorder=2000)
-    stationplot.plot_parameter('SW', df['dew_point_temperature'],
-                               color='#0b8b87', fontweight='bold')
+    Temp = stationplot.plot_parameter('NW', df['air_temperature'],
+                                      color='#fd3c06',
+                                      fontweight='bold', zorder=2000)
+    Td = stationplot.plot_parameter('SW', df['dew_point_temperature'],
+                                    color='#01ff07')
+    # fontweight = 'bold'
     # More complex ex. uses custom formatter to control how sea-level pressure
     # values are plotted. This uses the standard trailing 3-digits of
     # the pressure value in tenths of millibars.
 
-    stationplot.plot_parameter('NE', df['hectoPascal_ALTIM'],
-                               formatter=lambda v: format(10 * v, '.0f')[-3:],
-                               color="#2c6fbb")
+    p = stationplot.plot_parameter('NE', df['hectoPascal_ALTIM'],
+                                   formatter=lambda v: format(10 * v, '.0f')[-3:],
+                                   color="#a2cffe")
+    for x in [Temp, Td, p]:
+        x.set_path_effects([path_effects.Stroke(linewidth=1.5,
+                           foreground='black'), path_effects.Normal()])
+
     # Plot the cloud cover symbols in the center location. This uses the codes
     # made above and uses the `sky_cover` mapper to convert these values to
     # font codes for the weather symbol font.
@@ -157,6 +164,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
     plt.savefig('/home/sh16450/Desktop/Metar_plots/CURR_METAR_'+area+'.png',
                 bbox_inches='tight', transparent="True", pad_inches=0)
+
 
 
 if __name__ == '__main__':
