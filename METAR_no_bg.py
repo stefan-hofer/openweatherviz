@@ -166,7 +166,6 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                 bbox_inches='tight', transparent="True", pad_inches=0)
 
 
-
 if __name__ == '__main__':
     ncss, query = build_query()
     df_tot = get_data(ncss, query)
