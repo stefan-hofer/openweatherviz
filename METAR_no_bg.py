@@ -144,7 +144,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # the pressure value in tenths of millibars.
 
     p = stationplot.plot_parameter('NE', df['hectoPascal_ALTIM'],
-                                   formatter=lambda v: format(10 * v, '.0f')[-3:],
+                                   formatter=lambda v:
+                                   format(10 * v, '.0f')[-3:],
                                    color="#a2cffe")
     for x in [Temp, Td, p]:
         x.set_path_effects([path_effects.Stroke(linewidth=1.5,
