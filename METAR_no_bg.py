@@ -38,7 +38,7 @@ def build_query(west=-58.5, east=32, south=42, north=74):
     query.variables('air_temperature', 'dew_point_temperature', 'wind_speed',
                     'precipitation_amount_hourly', 'hectoPascal_ALTIM',
                     'air_pressure_at_sea_level', 'wind_from_direction',
-                    'cloud_area_fraction', 'weather', 'report')
+                    'cloud_area_fraction', 'weather', 'report', 'wind_gust')
     query.accept('csv')
     return ncss, query
 
@@ -108,6 +108,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     u, v = get_wind_components(((df['wind_speed'].values)*units('m/s'))
                                .to('knots'), (df['wind_from_direction'].values)
                                * units.degree)
+    gust = df['wind_gust']*units('m/s').to('km/hour')
     cloud_frac = df['cloud_area_fraction']
     # Change the DPI of the resulting figure. Higher DPI drastically improves
     # look of the text rendering.
@@ -148,19 +149,22 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                    formatter=lambda v:
                                    format(10 * v, '.0f')[-3:],
                                    color="#a2cffe")
-    for x in [Temp, Td, p]:
+    max_uv = stationplot.plot_parameter('SE', gust, color='#ed0dd9')
+
+    for x in [Temp, Td, p, max_uv]:
         x.set_path_effects([path_effects.Stroke(linewidth=1.5,
                            foreground='black'), path_effects.Normal()])
 
+    # Add wind barbs
+    stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
     # Plot the cloud cover symbols in the center location. This uses the codes
     # made above and uses the `sky_cover` mapper to convert these values to
     # font codes for the weather symbol font.
     stationplot.plot_symbol('C', cloud_frac, sky_cover)
     # Same this time, but plot current weather to the left of center, using the
     # `current_weather` mapper to convert symbols to the right glyphs.
-    stationplot.plot_symbol('W', wx, current_weather, fontsize=20)
-    # Add wind barbs
-    stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
+    stationplot.plot_symbol('W', wx, current_weather, zorder=2000)
+
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
@@ -184,7 +188,7 @@ if __name__ == '__main__':
 
     proj, point_locs, df = reduce_density(df_tot, 80000)
     plot_map_standard(proj, point_locs, df, area='SCANDI_S', west=1, east=32.7,
-                      south=54, north=64.5)
+                      south=54, north=64.5, fonts=16)
 
     proj, point_locs, df = reduce_density(df_tot, 70000)
     plot_map_standard(proj, point_locs, df, area='SCANDI_N', west=8, east=39.7,
