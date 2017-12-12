@@ -59,7 +59,8 @@ def get_data(ncss, query, density=50000.):
                   .format(attempts))
 
     df = df.replace(-99999, np.nan)
-    df = df.dropna(how='any', subset=['wind_from_direction', 'wind_speed'])
+    df = df.dropna(how='any', subset=['wind_from_direction', 'wind_speed',
+                   'dew_point_temperature'])
     df['cloud_area_fraction'] = (df['cloud_area_fraction'] * 8)
     df['cloud_area_fraction'] = df['cloud_area_fraction'].replace(np.nan, 10) \
         .astype(int)
