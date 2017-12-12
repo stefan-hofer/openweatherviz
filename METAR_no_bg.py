@@ -100,6 +100,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     df['weather'] = df['weather'].str.replace('FZBR', 'FZFG')
     df['weather'] = df['weather'].str.replace('-BLSN', 'BLSN')
     df['weather'] = df['weather'].str.replace('-DRSN', 'DRSN')
+    df['weather'] = df['weather'].str.replace('-FZUP', 'FZDZ')
     wx = [wx_code_map[s.split()[0] if ' ' in s else s] for s in df['weather']
           .fillna('')]
     # Get the wind components, converting from m/s to knots as will
