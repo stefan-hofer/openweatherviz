@@ -1,5 +1,6 @@
 import urllib3
 
+
 def download_synop():
     begin = input('Please enter the start time of the query of the format \
                   (YYYYMMDDHHmm): ')
@@ -8,6 +9,7 @@ def download_synop():
                 as the end time: ')
     if end == 'N' or 'n':
         string = '&begin='+str(begin)
+
 
 http = urllib3.PoolManager()
 path = '/mnt/test/stefan_hofer/Synop_data/'
