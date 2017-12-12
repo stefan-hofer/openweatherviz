@@ -5,8 +5,8 @@ def download_synop():
     begin = input('Please enter the start time of the query of the format \
                   (YYYYMMDDHHmm): ')
     end = input('Please enter the end time of the query of the format \
-                (YYYYMMDDHHmm). If you enter 'N' then it will use current time \
-                as the end time: ')
+                (YYYYMMDDHHmm). If you enter "N" then it will use current \
+                time as the end time: ')
     if end == 'N' or 'n':
         string = '&begin='+str(begin)
 
