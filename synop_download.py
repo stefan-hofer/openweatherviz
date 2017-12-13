@@ -1,14 +1,32 @@
 import urllib3
 
 
-def download_synop():
-    begin = input('Please enter the start time of the query of the format \
-                  (YYYYMMDDHHmm): ')
-    end = input('Please enter the end time of the query of the format \
-                (YYYYMMDDHHmm). If you enter "N" then it will use current \
-                time as the end time: ')
-    if end == 'N' or 'n':
-        string = '&begin='+str(begin)
+def download_synop(lang='eng', header='yes'):
+    begin = str(input('Please enter the start time of the query of the format'
+                      '(YYYYMMDDHHmm): '))
+    end = str(input('Please enter the end time of the query of the format'
+                    '(YYYYMMDDHHmm). If you enter "N" then it will use current'
+                    'time as the end time: '))
+    state = str(input('If you want to download synops from a specific country'
+                      'only then please specify the three letter acronym'
+                      '(e.g. "Pol"). If no country enter "N": '))
+    list_names = ['begin', 'end', 'lang', 'header', 'state']
+    lis = [x for x in [begin, end, lang, header, state]]
+    dic = {}
+    for name, val in zip(list_names, lis):
+        if (val == 'N' or val == 'n'):
+            pass
+        else:
+            dic[name] = val
+    url = 'http://www.ogimet.com/cgi-bin/getsynop'
+    for key, value in dic.items():
+        print(key)
+        print(value)
+        url += '&'+key
+        url += '='+value
+        print(url)
+
+    return dic, url
 
 
 http = urllib3.PoolManager()
