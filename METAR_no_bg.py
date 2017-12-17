@@ -11,10 +11,18 @@ from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
 from metpy.plots.wx_symbols import current_weather, sky_cover, wx_code_map
 from metpy.plots import StationPlot
+from os.path import expanduser
+import os
 # Request METAR data from TDS
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
 # ncdecoded/files/Surface_METAR_20171130_0000.nc')
 
+# set up the paths and test for existence
+path = expanduser('~') + '/Documents/Metar_plots'
+try:
+    os.listdir(path)
+except:
+    os.mkdir(path)
 
 def build_query(west=-58.5, east=32, south=42, north=74):
     metar = TDSCatalog('http://thredds.ucar.edu/thredds/catalog/nws/metar/'
@@ -169,7 +177,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
-    plt.savefig('/home/sh16450/Desktop/Metar_plots/CURR_METAR_'+area+'.png',
+    plt.savefig(path + '/CURR_METAR_'+area+'.png',
                 bbox_inches='tight', transparent="True", pad_inches=0)
 
 
