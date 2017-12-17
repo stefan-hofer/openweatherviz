@@ -1,6 +1,7 @@
 import urllib3
 import os
 from os.path import expanduser
+import shutil
 
 
 
@@ -45,7 +46,7 @@ try:
     os.listdir(path)
 except:
     os.mkdir(path)
-with http.request('GET', url, preload_content=False) as r, open(path+'/test.txt', 'wb') \
+with http.request('GET', url, preload_content=False) as r, open(path+'/test.csv', 'wb') \
         as out_file:
             shutil.copyfileobj(r, out_file)
 
