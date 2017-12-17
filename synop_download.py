@@ -1,4 +1,7 @@
 import urllib3
+import os
+from os.path import expanduser
+
 
 
 def download_synop(lang='eng', header='yes'):
@@ -7,6 +10,7 @@ def download_synop(lang='eng', header='yes'):
     end = str(input('Please enter the end time of the query of the format'
                     '(YYYYMMDDHHmm). If you enter "N" then it will use current'
                     'time as the end time: '))
+    # state='Austri' for Austrian stations
     state = str(input('If you want to download synops from a specific country'
                       'only then please specify the three letter acronym'
                       '(e.g. "Pol"). If no country enter "N": '))
@@ -18,21 +22,30 @@ def download_synop(lang='eng', header='yes'):
             pass
         else:
             dic[name] = val
-    url = 'http://www.ogimet.com/cgi-bin/getsynop'
+    url = 'http://www.ogimet.com/cgi-bin/getsynop?'
+    i = 0
     for key, value in dic.items():
         print(key)
         print(value)
-        url += '&'+key
+        if i == 0:
+            url += key
+        else:
+            url += '&'+key
         url += '='+value
+        i += 1
         print(url)
 
     return dic, url
 
 
 http = urllib3.PoolManager()
-path = '/mnt/test/stefan_hofer/Synop_data/'
-url = 'http://www.ogimet.com/cgi-bin/getsynop?begin=201712120000&lang=eng&header=yes&state=Pol'
-with http.request('GET', url, preload_content=False) as r, open(path, 'wb') \
+# set up the paths and test for existence
+path = expanduser('~') + '/Documents/Synop_data'
+try:
+    os.listdir(path)
+except:
+    os.mkdir(path)
+with http.request('GET', url, preload_content=False) as r, open(path+'/test.txt', 'wb') \
         as out_file:
             shutil.copyfileobj(r, out_file)
 
