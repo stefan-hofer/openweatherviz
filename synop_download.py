@@ -1,3 +1,4 @@
+from datetime import datetime
 import urllib3
 import os
 from os.path import expanduser
@@ -38,19 +39,64 @@ def download_synop(lang='eng', header='yes'):
     return dic, url
 
 
-http = urllib3.PoolManager()
-# set up the paths and test for existence
-path = expanduser('~') + '/Documents/Synop_data'
-try:
-    os.listdir(path)
-except FileNotFoundError:
-    os.mkdir(path)
-    print('Created the path {}'.format(path))
+def url_last_hour(state=None, lang='eng', header='yes'):
+    # Create the dates and strings
+    now = datetime.utcnow()
+    now = datetime(now.year, now.month, now.day, now.hour, 30)
+    end_str = now.strftime('%Y%m%d%H%M')
+    save_str = datetime(now.year, now.month, now.day, now.hour, 00)
+    save_str = save_str.strftime('%Y%m%d%H%M')
+    start = datetime(now.year, now.month, now.day, now.hour-1, 30)
+    start_str = start.strftime('%Y%m%d%H%M')
+    # set up the paths and test for existence
+    path = expanduser('~') + '/Documents/Synop_data'
+    try:
+        os.listdir(path)
+    except FileNotFoundError:
+        os.mkdir(path)
+        print('Created the path {}'.format(path))
 
-dic, url = download_synop()
-with http.request('GET', url, preload_content=False) as r, open(path+'/test.csv', 'wb') \
-        as out_file:
-            shutil.copyfileobj(r, out_file)
+    if state is None:
+        path = path + '/synop_' + save_str + '.csv'
+    else:
+        path = path + '/synop_' + save_str + '_' + state + '.csv'
+
+    list_names = ['begin', 'end', 'lang', 'header', 'state']
+    lis = [x for x in [start_str, end_str, lang, header, state]]
+    dic = {}
+    for name, val in zip(list_names, lis):
+        if (val == 'N' or val == 'n' or val is None):
+            pass
+        else:
+            dic[name] = val
+    url = 'http://www.ogimet.com/cgi-bin/getsynop?'
+    i = 0
+    for key, value in dic.items():
+        print(key)
+        print(value)
+        if i == 0:
+            url += key
+        else:
+            url += '&'+key
+        url += '='+value
+        i += 1
+        print(url)
+
+    return url, path
+
+
+def download_and_save(path, url):
+    http = urllib3.PoolManager()
+    with http.request('GET', url, preload_content=False) as r, open(path, 'wb') \
+            as out_file:
+                shutil.copyfileobj(r, out_file)
+
+
+if __name__ == 'main':
+    url, path = url_last_hour(state=None)
+    download_and_save(path, url)
+
+
 
 
 # WMOIND,YEAR,MONTH,DAY,HOUR,MIN,REPORT
