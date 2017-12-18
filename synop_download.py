@@ -4,7 +4,6 @@ from os.path import expanduser
 import shutil
 
 
-
 def download_synop(lang='eng', header='yes'):
     begin = str(input('Please enter the start time of the query of the format'
                       '(YYYYMMDDHHmm): '))
@@ -46,6 +45,8 @@ try:
     os.listdir(path)
 except:
     os.mkdir(path)
+
+dic, url = download_synop()
 with http.request('GET', url, preload_content=False) as r, open(path+'/test.csv', 'wb') \
         as out_file:
             shutil.copyfileobj(r, out_file)
