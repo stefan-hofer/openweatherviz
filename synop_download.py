@@ -43,8 +43,9 @@ http = urllib3.PoolManager()
 path = expanduser('~') + '/Documents/Synop_data'
 try:
     os.listdir(path)
-except:
+except FileNotFoundError:
     os.mkdir(path)
+    print('Created the path {}'.format(path))
 
 dic, url = download_synop()
 with http.request('GET', url, preload_content=False) as r, open(path+'/test.csv', 'wb') \
@@ -97,18 +98,3 @@ with http.request('GET', url, preload_content=False) as r, open(path+'/test.csv'
 # 5) All synop and synop-mobil from a land station from 06 UTC to 07 UTC on 8 Jun 2011
 #
 #   http://www.ogimet.com/cgi-bin/getsynop?begin=201106080600&end=201106080700
-#
-#
-# There are some limits:
-#
-# -No more than 200000 synops in a petition. :-)
-#
-# You can play with libraries like curl to get directly your desired file.
-#
-# curl "http://www.ogimet.com/cgi-bin/getsynop?block=123&begin=200912010000&end=200912040000" -o "your_desired_file_name"
-#
-# Same using wget
-#
-# wget "http://www.ogimet.com/cgi-bin/getsynop?block=123&begin=200912010000&end=200912040000" -O "your_desired_file_name"
-#
-# Enjoy! And please, don't abuse.

@@ -21,8 +21,9 @@ import os
 path = expanduser('~') + '/Documents/Metar_plots'
 try:
     os.listdir(path)
-except:
+except FileNotFoundError:
     os.mkdir(path)
+
 
 def build_query(west=-58.5, east=32, south=42, north=74):
     metar = TDSCatalog('http://thredds.ucar.edu/thredds/catalog/nws/metar/'
