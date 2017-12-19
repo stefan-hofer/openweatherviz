@@ -35,14 +35,19 @@ def load(filename):
 df, df_report = load(path)
 
 # Do some cleaning up of the dataframe
-df = df.loc[df['1'] == 'AAXX']
-df = df.loc[df['Station'] != '00000']
+df = df.loc[df['1'] == 'AAXX']  # only fixed land stations
+df = df.loc[df['Station'] != '00000']  # only valid station IDs
 # Extract cloud cover
 cloud_cover = df['5'].str[0].replace('/', np.nan)
 # extract the wind direction and convert to degress
 dd = (((df['5'].str[1:3].str.replace(r'(^.*/.*$)', '//')).replace('//', np.nan))
       .astype(float) * 10)
 
+# Identify if wind obs. is in m/s (0,1) or knots (3,4)
+identifier = df['2'].str[4]
 # Extract wind speed and check for units. Convert all to knots
-ff = (((df['5'].str[3:].str.replace(r'(^.*/.*$)', '//')).replace('//', np.nan))
+ff = (((df['5'].str[3:5].str.replace(r'(^.*/.*$)', '//')).replace('//', np.nan))
       .astype(float))
+# syntax to change only a subset of the df
+(ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+ff = ff.values*units('knots')
