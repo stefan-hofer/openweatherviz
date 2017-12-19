@@ -5,7 +5,7 @@ from os.path import expanduser
 import shutil
 
 
-def download_synop(lang='eng', header='yes'):
+def url_synop(lang='eng', header='yes'):
     begin = str(input('Please enter the start time of the query of the format'
                       '(YYYYMMDDHHmm): '))
     end = str(input('Please enter the end time of the query of the format'
@@ -40,13 +40,32 @@ def download_synop(lang='eng', header='yes'):
 
 
 def url_last_hour(state=None, lang='eng', header='yes'):
+    '''
+    Function to create the url for latest (full hour) synop download from
+    Ogimet.
+
+    Arguments:
+    ----------
+    state = None, lang = 'eng', header = 'yes'
+
+    Returns:
+    --------
+    url (to download file)
+    path (to save the file)
+
+    Examples:
+    ---------
+    from synop_download import url_last_hour
+    url, path = url_last_hour()
+
+    '''
     # Create the dates and strings
     now = datetime.utcnow()
-    now = datetime(now.year, now.month, now.day, now.hour, 30)
+    now = datetime(now.year, now.month, now.day, now.hour, 29)
     end_str = now.strftime('%Y%m%d%H%M')
     save_str = datetime(now.year, now.month, now.day, now.hour, 00)
     save_str = save_str.strftime('%Y%m%d%H%M')
-    start = datetime(now.year, now.month, now.day, now.hour-1, 30)
+    start = datetime(now.year, now.month, now.day, now.hour-1, 29)
     start_str = start.strftime('%Y%m%d%H%M')
     # set up the paths and test for existence
     path = expanduser('~') + '/Documents/Synop_data'
@@ -86,6 +105,29 @@ def url_last_hour(state=None, lang='eng', header='yes'):
 
 
 def download_and_save(path, url):
+    '''
+    Function to download and save the file from the url created by either
+    url_last_hour() or url_synop().
+
+    Arguments:
+    ----------
+    path (where to save file on disk)
+    url (to download file)
+
+    Returns:
+    --------
+    File on disk
+
+    Examples:
+    ---------
+    Examples:
+    ---------
+    from synop_download import url_last_hour
+    url, path = url_last_hour()
+    download_and_save(path, url)
+
+    '''
+
     http = urllib3.PoolManager()
     with http.request('GET', url, preload_content=False) as r, open(path, 'wb') \
             as out_file:
