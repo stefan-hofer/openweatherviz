@@ -20,23 +20,26 @@ def load(filename):
     df.index = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
     # Sort by index to sort by date
     df = df.sort_index()
-    list_two = [str(x) for x in range(1, 31)]
-    df[list_two] = df['Report'].str.split(' ', expand=True, n=29)
-    df_report.sort_index()
-
     # Fill the missing values
     df.fillna(value=np.nan, inplace=True)
-    df_report.fillna(value=np.nan, inplace=True)
     # df_report.fillna(value=np.nan, inplace=True)
-    return df, df_report
+    return df
 
 
 # Load the data into a dataframe
-df, df_report = load(path)
-
+df = load(path)
 # Do some cleaning up of the dataframe
-df = df.loc[df['1'] == 'AAXX']  # only fixed land stations
 df = df.loc[df['Station'] != '00000']  # only valid station IDs
+df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
+
+# Split after '333' - indication of climatic data (eg 24h precip)
+df['current'] = df['Report'].str.split(' 333 ').str[0]
+df['climat'] = df['Report'].str.split(' 333 ').str[1]
+
+
+
+
+
 # Extract cloud cover
 cloud_cover = df['5'].str[0].replace('/', np.nan)
 # extract the wind direction and convert to degress
