@@ -8,22 +8,23 @@ from siphon.simplewebservice.wyoming import WyomingUpperAir
 import seaborn as sns
 
 
-def plot_upper_air(station=11035, date=False):
+def plot_upper_air(station='11035', date=False):
     '''
     -----------------------------
     Default use of plot_upper_air:
 
     This will plot a SkewT sounding for station '11035' (Wien Hohe Warte)
-    plot_upper_air(station=11035, date=False)
+    plot_upper_air(station='11035', date=False)
     '''
     # sns.set(rc={'axes.facecolor':'#343837', 'figure.facecolor':'#343837',
     #  'grid.linestyle':'','axes.labelcolor':'#04d8b2','text.color':'#04d8b2',
     #  'xtick.color':'#04d8b2','ytick.color':'#04d8b2'})
     # Get time in UTC
+    station = str(station)
     if date is False:
         now = datetime.utcnow()
         # If morning then 0z sounding, otherwise 12z
-        if now.hour <= 12:
+        if now.hour < 12:
             hour = 0
         else:
             hour = 12
@@ -35,12 +36,12 @@ def plot_upper_air(station=11035, date=False):
         month = int(input('Please specify the month: '))
         day = int(input('Please specify the day: '))
         hour = int(input('Please specify the hour: '))
-        if hour <= 12:
+        if hour < 12:
             hour = 0
         else:
             hour = 12
         date = datetime(year, month, day, hour)
-        datestr = date.strftime('%Iz %Y-%m-%d')
+        datestr = date.strftime('%Hz %Y-%m-%d')
         print('You entered {}'.format(date))
 
     # This requests the data 11035 is

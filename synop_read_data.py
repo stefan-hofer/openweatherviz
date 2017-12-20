@@ -12,32 +12,63 @@ def _dateparser(y, m, d, h, M):
     return dt.datetime(int(y), int(m), int(d), int(h), int(M))
 
 
-def load(filename):
-    df = pd.read_csv(filename)
+def load_main(filename):
+    fields = ['ESTACION', 'ANO', 'MES', 'DIA', 'HORA', 'MINUTO', 'PARTE']
+    df = pd.read_csv(filename, usecols=fields)
     list_one = ['Station', 'Year', 'Month', 'Day', 'Hour', 'Minute', 'Report']
     df.columns = list_one
     # Create time columns and make it the index
-    df.index = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
-    # Sort by index to sort by date
-    df = df.sort_index()
+    df['time'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
     # Fill the missing values
     df.fillna(value=np.nan, inplace=True)
     # df_report.fillna(value=np.nan, inplace=True)
     return df
 
 
+def load_report(filename):
+    fields = ['PARTE']
+    df = pd.read_csv(filename, usecols=fields)
+    list_one = ['Report']
+    df.columns = list_one
+    # Fill the missing values
+    # df.fillna(value=np.nan, inplace=True)
+    # df_report.fillna(value=np.nan, inplace=True)
+    return df
+
+
 # Load the data into a dataframe
-df = load(path)
+df = load_main(path)
+df_report = load_report(path)
+
+
 # Do some cleaning up of the dataframe
 df = df.loc[df['Station'] != '00000']  # only valid station IDs
 df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
+df['Report'] = df['Report'].str.split('=').str[0]
 
-# Split after '333' - indication of climatic data (eg 24h precip)
-df['current'] = df['Report'].str.split(' 333 ').str[0]
-df['climat'] = df['Report'].str.split(' 333 ').str[1]
+df[['Type', 'Dat', 'Statindex', 'iihVV', 'Nddff',
+    'Rest']] = df['Report'].str.split(' ', n=5, expand=True)
 
+# Split after '333' etc. - indication of climatic data (eg 24h precip)
+split_list = [' 555 ', ' 333 ', ' 222']
+for x in split_list:
+    df[x] = df['Rest'].str.split(x, n=1, expand=True)[1]
+    df['Rest'] = df['Rest'].str.split(x, n=1, expand=True)[0]
 
+# Create new df with only the first group of observations (standard observations)
+df_new = df['Rest'].str.split(' ', expand=True)
+df_new.fillna(value='XXXXX', inplace=True)
 
+# Split up all the values that start with chronological numbers in the synop_
+# to the corresponding columns defined in list1
+list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
+for x in range(1, 10):
+    for y in range(0, 9):
+        if y == 0:
+            df_new[list1[x-1]] = df_new[y][df_new[y].str.startswith(str(x))]
+        else:
+            df_new[list1[x-1]][df_new[y].str.startswith(str(x))] = (df_new[y][df_new[y].str.
+                                                                    startswith(str(x))])
 
 
 # Extract cloud cover
