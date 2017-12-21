@@ -46,6 +46,7 @@ df = df.loc[df['Station'] != '00000']  # only valid station IDs
 df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
 df['Report'] = df['Report'].str.split('=').str[0]
 
+# Get the first 5 groups that every synop contains
 df[['Type', 'Dat', 'Statindex', 'iihVV', 'Nddff',
     'Rest']] = df['Report'].str.split(' ', n=5, expand=True)
 
@@ -55,15 +56,36 @@ for x in split_list:
     df[x] = df['Rest'].str.split(x, n=1, expand=True)[1]
     df['Rest'] = df['Rest'].str.split(x, n=1, expand=True)[0]
 
+# Sort all the values from the '333' group in corresponding columns
+list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
+df_climat = df[' 333 '].str.split(' ', expand=True, n=8)
+shp = shape(df_climat)[1]
+list_xx = ['333'] * shp
+list_cols = [x+'_333' for x in list1]
+df_climat.fillna(value='XXXXX', inplace=True)
+
+for x in range(1, 10):
+    for y in range(0, shp):
+        if y == 0:
+            df_climat[list_cols[x-1]] = (df_climat[y]
+                                         [df_climat[y].str.startswith(str(x))])
+        else:
+            (df_climat[list_cols[x-1]][df_climat[y].
+             str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
+                                         startswith(str(x))])
+
+
 # Create new df with only the first group of observations (standard observations)
 df_new = df['Rest'].str.split(' ', expand=True)
 df_new.fillna(value='XXXXX', inplace=True)
 
 # Split up all the values that start with chronological numbers in the synop_
 # to the corresponding columns defined in list1
-list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
+
+max_iter = shape(df_new)[1]
+
 for x in range(1, 10):
-    for y in range(0, 9):
+    for y in range(0, max_iter):
         if y == 0:
             df_new[list1[x-1]] = df_new[y][df_new[y].str.startswith(str(x))]
         else:
