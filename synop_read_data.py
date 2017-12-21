@@ -102,10 +102,11 @@ df_new['max_gust'][df_new['max_gust'].str.startswith('00')]
 # =======================================================================================
 df.fillna(np.nan, inplace=True)
 df = df.replace('NIL', np.nan)
+final_df = pd.DataFrame()
 # Extract cloud cover
-cloud_cover = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
+final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
 # extract the wind direction and convert to degress
-dd = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
+final_df['dd'] = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
                     replace('//', np.nan))) * 10
 
 # Identify if wind obs. is in m/s (0,1) or knots (3,4)
@@ -115,4 +116,4 @@ ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
                     .replace('//', np.nan))).fillna(np.nan)
 # syntax to change only a subset of the df
 (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
-ff = ff.values*units('knots')
+final_df['ff'] = ff.values*units('knots')
