@@ -87,23 +87,32 @@ max_iter = shape(df_new)[1]
 for x in range(1, 10):
     for y in range(0, max_iter):
         if y == 0:
+            df_new['max_gust'] = df_new[y][df_new[y].str.startswith(str('00'))]
             df_new[list1[x-1]] = df_new[y][df_new[y].str.startswith(str(x))]
         else:
             df_new[list1[x-1]][df_new[y].str.startswith(str(x))] = (df_new[y][df_new[y].str.
                                                                     startswith(str(x))])
 
+df_new.fillna(value='XXXXX', inplace=True)
+# Print all the stations with gusts >= 100 knots or m/s
+df_new['max_gust'][df_new['max_gust'].str.startswith('00')]
 
+# =======================================================================================
+# ======================= EXTRACT ALL THE DATA ==========================================
+# =======================================================================================
+df.fillna(np.nan, inplace=True)
+df = df.replace('NIL', np.nan)
 # Extract cloud cover
-cloud_cover = df['5'].str[0].replace('/', np.nan)
+cloud_cover = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
 # extract the wind direction and convert to degress
-dd = (((df['5'].str[1:3].str.replace(r'(^.*/.*$)', '//')).replace('//', np.nan))
-      .astype(float) * 10)
+dd = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
+                    replace('//', np.nan))) * 10
 
 # Identify if wind obs. is in m/s (0,1) or knots (3,4)
-identifier = df['2'].str[4]
+identifier = df['Dat'].str[4]
 # Extract wind speed and check for units. Convert all to knots
-ff = (((df['5'].str[3:5].str.replace(r'(^.*/.*$)', '//')).replace('//', np.nan))
-      .astype(float))
+ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
+                    .replace('//', np.nan))).fillna(np.nan)
 # syntax to change only a subset of the df
 (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
 ff = ff.values*units('knots')
