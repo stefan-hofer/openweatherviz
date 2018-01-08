@@ -122,3 +122,7 @@ final_df['ff'] = ff.values
 final_df['TT'] = df_new['X1'].loc[df_new['X1'].str[1] == '0'].str[2:].astype(int)/10
 final_df['TT'].loc[df_new['X1'].str[1] == '1'] = (df_new['X1'].loc[df_new['X1']
                                                   .str[1] == '1'].str[2:5].astype(int)/-10)
+# Extract Td and assign + or - sign
+final_df['TD'] = df_new['X2'].loc[df_new['X2'].str[1] == '0'].str[2:].astype(int)/10
+final_df['TD'].loc[df_new['X2'].str[1] == '1'] = (df_new['X2'].loc[df_new['X2']
+                                                  .str[1] == '1'].str[2:5].astype(int)/-10)
