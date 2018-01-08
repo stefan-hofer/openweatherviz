@@ -107,7 +107,7 @@ final_df = pd.DataFrame()
 final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
 # extract the wind direction and convert to degress
 final_df['dd'] = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
-                    replace('//', np.nan))) * 10
+                               replace('//', np.nan))) * 10
 
 # Identify if wind obs. is in m/s (0,1) or knots (3,4)
 identifier = df['Dat'].str[4]
@@ -116,4 +116,9 @@ ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
                     .replace('//', np.nan))).fillna(np.nan)
 # syntax to change only a subset of the df
 (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
-final_df['ff'] = ff.values*units('knots')
+final_df['ff'] = ff.values
+
+# Extract Temperature and assign + or - by dividing through 10 or -10
+final_df['TT'] = df_new['X1'].loc[df_new['X1'].str[1] == '0'].str[2:].astype(int)/10
+final_df['TT'].loc[df_new['X1'].str[1] == '1'] = (df_new['X1'].loc[df_new['X1']
+                                                  .str[1] == '1'].str[2:5].astype(int)/-10)
