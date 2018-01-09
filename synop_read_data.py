@@ -62,7 +62,6 @@ for x in split_list:
         print('Error when handling {} group!'.format(x))
 
 
-
 # Sort all the values from the '333' group in corresponding columns
 list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
 df_climat = df[' 333 '].str.split(' ', expand=True, n=8)
@@ -135,4 +134,18 @@ final_df['TD'].loc[df_new['X2'].str[1] == '1'] = (df_new['X2'].loc[df_new['X2']
                                                   .str[1] == '1'].str[2:5].astype(int)/-10)
 
 # Extract the station pressure
-final_df['PP'] = df_new['X3'].loc[(df_new['X3'].str[1] != '0') & (df_new['X3'] != 'XXXXX')].str[1:].astype(int)/10
+list_to_drop = ['XXXXX', '/////', ]
+df_new['XP'] = df_new['X3'][~df_new['X3'].isin(list_to_drop)]
+final_df['PP'] = (df_new['XP'].loc[df_new['XP'].str[1] == '0'].str[1:]
+                  .astype(int) + 10000)/10
+for x in ['9', '8', '7']:
+    final_df['PP'].loc[df_new['XP'].str[1] == x] = (df_new['XP'].loc[df_new['XP'].str[1]
+                                                    == x].str[1:].astype(int)/10)
+
+# Extract the reduced sea level pressure
+df_new['XSLP'] = df_new['X4'][~df_new['X4'].isin(list_to_drop)]
+final_df['SLP'] = (df_new['XSLP'].loc[df_new['XSLP'].str[1] == '0'].str[1:]
+                   .astype(int) + 10000)/10
+for x in ['9', '8', '7']:
+    final_df['SLP'].loc[df_new['XSLP'].str[1] == x] = (df_new['XSLP'].loc[df_new['XSLP'].str[1]
+                                                       == x].str[1:].astype(int)/10)
