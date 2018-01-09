@@ -149,3 +149,13 @@ final_df['SLP'] = (df_new['XSLP'].loc[df_new['XSLP'].str[1] == '0'].str[1:]
 for x in ['9', '8', '7']:
     final_df['SLP'].loc[df_new['XSLP'].str[1] == x] = (df_new['XSLP'].loc[df_new['XSLP'].str[1]
                                                        == x].str[1:].astype(int)/10)
+
+# Extract the pressure tendency and assign - or +
+list_to_drop = ['XXXXX', '/////', '5////']
+df_new['X5'].loc[df_new['X5'].str.contains('/', case=False)] = 'XXXXX'
+df_new['PT'] = df_new['X5'][~df_new['X5'].isin(list_to_drop)].str[2:].astype(int)/10
+final_df['Ptendency'] = df_new['PT']
+for x in ['5', '6', '7', '8']:
+    final_df['Ptendency'].loc[df_new['X5'].str[1] == x] = (final_df['Ptendency'].loc
+                                                           [df_new['X5'].str[1]
+                                                            == x] * (-1))
