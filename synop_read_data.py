@@ -42,8 +42,10 @@ df_report = load_report(path)
 
 
 # Do some cleaning up of the dataframe
-df = df.loc[df['Station'] != '00000']  # only valid station IDs
+
+# only valid station IDs
 df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
+df = df.loc[df['Station'] != '00000']
 df['Report'] = df['Report'].str.split('=').str[0]
 
 # Get the first 5 groups that every synop contains
@@ -53,8 +55,13 @@ df[['Type', 'Dat', 'Statindex', 'iihVV', 'Nddff',
 # Split after '333' etc. - indication of climatic data (eg 24h precip)
 split_list = [' 555 ', ' 333 ', ' 222']
 for x in split_list:
-    df[x] = df['Rest'].str.split(x, n=1, expand=True)[1]
-    df['Rest'] = df['Rest'].str.split(x, n=1, expand=True)[0]
+    try:
+        df[x] = df['Rest'].str.split(x, n=1, expand=True)[1]
+        df['Rest'] = df['Rest'].str.split(x, n=1, expand=True)[0]
+    except KeyError:
+        print('Error when handling {} group!'.format(x))
+
+
 
 # Sort all the values from the '333' group in corresponding columns
 list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
