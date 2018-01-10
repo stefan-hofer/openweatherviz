@@ -193,5 +193,7 @@ for x in range(0, 9):
     s = 'Precip_' + str(hour_list[x]) + 'h'
     final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
     print(s)
+final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
+                                                         loc[df_new['Precip_h'] == '/'])
 # Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])
 # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h Precip_15h
