@@ -159,3 +159,14 @@ for x in ['5', '6', '7', '8']:
     final_df['Ptendency'].loc[df_new['X5'].str[1] == x] = (final_df['Ptendency'].loc
                                                            [df_new['X5'].str[1]
                                                             == x] * (-1))
+
+# Extract the precipitation data
+df_new['X6'].loc[df_new['X6'].str.contains('/', case=False)] = 'XXXXX'
+df_new['RR'] = df_new['X6'][~df_new['X6'].isin(list_to_drop)].str[2:].astype(int)
+# Apparently all the precip data is in '333' group
+
+# Extract current current weather
+list_to_drop = ['XX']
+df_new['Cweather'] = df_new['X7'].str[1:3]
+df_new['Cweather'].loc[df_new['Cweather'].str.contains('/', case=False)] = 'XX'
+final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(list_to_drop)].astype(int)
