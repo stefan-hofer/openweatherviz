@@ -109,6 +109,7 @@ df_new['max_gust'][df_new['max_gust'].str.startswith('00')]
 df.fillna(np.nan, inplace=True)
 df = df.replace('NIL', np.nan)
 final_df = pd.DataFrame()
+final_df['Station'] = df['Statindex']
 # Extract cloud cover
 final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
 # extract the wind direction and convert to degress
