@@ -170,3 +170,9 @@ list_to_drop = ['XX']
 df_new['Cweather'] = df_new['X7'].str[1:3]
 df_new['Cweather'].loc[df_new['Cweather'].str.contains('/', case=False)] = 'XX'
 final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(list_to_drop)].astype(int)
+
+# Extract past weather
+list_to_drop = ['XX']
+df_new['Pweather'] = df_new['X7'].str[3:5]
+df_new['Pweather'].loc[df_new['Pweather'].str.contains('/', case=False)] = 'XX'
+final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
