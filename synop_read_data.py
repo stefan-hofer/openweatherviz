@@ -187,3 +187,11 @@ df_new['Precip_h'] = df_climat['X6_333'].str[4]
 final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)
 final_df['Precip'].loc[final_df['Precip'] >= 991] = (final_df['Precip'] - 990) / 10
 final_df['Precip'].loc[final_df['Precip'] == 990] = 0.01
+
+hour_list = [6, 12, 18, 24, 1, 2, 3, 9, 15]
+for x in range(0, 9):
+    s = 'Precip_' + str(hour_list[x]) + 'h'
+    final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
+    print(s)
+# Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])
+# Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h Precip_15h
