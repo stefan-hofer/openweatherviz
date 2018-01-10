@@ -176,3 +176,14 @@ list_to_drop = ['XX']
 df_new['Pweather'] = df_new['X7'].str[3:5]
 df_new['Pweather'].loc[df_new['Pweather'].str.contains('/', case=False)] = 'XX'
 final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
+
+# Extract precip data
+df_climat.fillna('XXXXX', inplace=True)
+df_climat['X6_333'].loc[df_climat['X6_333'].str.contains('//')] == 'XXXXX'
+list_to_drop = ['XXX', '///']
+df_new['Precip'] = df_climat['X6_333'].str[1:4]
+df_new['Precip_h'] = df_climat['X6_333'].str[4]
+
+final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)
+final_df['Precip'].loc[final_df['Precip'] >= 991] = (final_df['Precip'] - 990) / 10
+final_df['Precip'].loc[final_df['Precip'] == 990] = 0.01
