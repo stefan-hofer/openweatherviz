@@ -7,6 +7,10 @@ from metpy.units import units
 url, path = url_last_hour()
 download_and_save(path, url)
 
+# Download and save latest Lat Lon Station info
+download_and_save('/home/sh16450/Documents/Synop_data/latlon/latest.txt',
+                  'https://oscar.wmo.int/oscar/vola/vola_legacy_report.txt')
+
 
 def _dateparser(y, m, d, h, M):
     return dt.datetime(int(y), int(m), int(d), int(h), int(M))
@@ -45,7 +49,10 @@ df_report = load_report(path)
 
 # only valid station IDs
 df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
-df = df.loc[df['Station'] != '00000']
+try:
+    df = df[df['Station'] != '00000']
+except TypeError:
+    df = df[df['Station'] != 00000]
 df['Report'] = df['Report'].str.split('=').str[0]
 
 # Get the first 5 groups that every synop contains
