@@ -7,9 +7,21 @@ from metpy.units import units
 url, path = url_last_hour()
 download_and_save(path, url)
 
-# Download and save latest Lat Lon Station info
-download_and_save('/home/sh16450/Documents/Synop_data/latlon/latest.txt',
-                  'https://oscar.wmo.int/oscar/vola/vola_legacy_report.txt')
+# Load lat lon dataset
+fields = ['RegionId', 'RegionName', 'CountryArea', 'CountryCode', 'StationId',
+          'IndexNbr', 'IndexSubNbr', 'StationName', 'Latitude', 'Longitude', 'Hp',
+          'HpFlag', 'Hha', 'HhaFlag', 'PressureDefId']
+df_latlon = pd.read_csv('/home/sh16450/Documents/Synop_data/latlon/latest_edited.csv',
+                        usecols=fields)
+df_latlon[['Lat_deg', 'Lat_mins', 'Lat_sec']] = (df_latlon['Latitude'].
+                                                 str.split(' ', expand=True))
+df_latlon[['Lon_deg', 'Lon_mins', 'Lon_sec']] = (df_latlon['Longitude'].
+                                                 str.split(' ', expand=True))
+df_latlon['E_or_W'] = df_latlon['Lon_sec'].str[-1]
+df_latlon['Lon_sec'] = df_latlon['Lon_sec'].str[0:-1]
+
+df_latlon['N_or_S'] = df_latlon['Lat_sec'].str[-1]
+df_latlon['Lat_sec'] = df_latlon['Lat_sec'].str[0:-1]
 
 
 def _dateparser(y, m, d, h, M):
