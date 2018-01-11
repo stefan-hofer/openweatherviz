@@ -17,11 +17,25 @@ df_latlon[['Lat_deg', 'Lat_mins', 'Lat_sec']] = (df_latlon['Latitude'].
                                                  str.split(' ', expand=True))
 df_latlon[['Lon_deg', 'Lon_mins', 'Lon_sec']] = (df_latlon['Longitude'].
                                                  str.split(' ', expand=True))
+# Find E or W (N or S)
 df_latlon['E_or_W'] = df_latlon['Lon_sec'].str[-1]
 df_latlon['Lon_sec'] = df_latlon['Lon_sec'].str[0:-1]
 
 df_latlon['N_or_S'] = df_latlon['Lat_sec'].str[-1]
 df_latlon['Lat_sec'] = df_latlon['Lat_sec'].str[0:-1]
+
+# Convert arcmin and sec to degrees
+df_latlon['Lat_mins'] = df_latlon['Lat_mins'].astype(float) / 60
+df_latlon['Lat_sec'] = df_latlon['Lat_sec'].astype(float) / (60**2)
+
+df_latlon['Lon_mins'] = df_latlon['Lon_mins'].astype(float) / 60
+df_latlon['Lon_sec'] = df_latlon['Lon_sec'].astype(float) / (60**2)
+
+df_latlon['Lat'] = (df_latlon['Lat_deg'].astype(float) + df_latlon['Lat_mins'].
+                    astype(float) + df_latlon['Lat_sec'])
+
+df_latlon['Lon'] = (df_latlon['Lon_deg'].astype(float) + df_latlon['Lon_mins'].
+                    astype(float) + df_latlon['Lon_sec'])
 
 
 def _dateparser(y, m, d, h, M):
