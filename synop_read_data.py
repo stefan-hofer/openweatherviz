@@ -36,6 +36,8 @@ df_latlon['Lat'] = (df_latlon['Lat_deg'].astype(float) + df_latlon['Lat_mins'].
 
 df_latlon['Lon'] = (df_latlon['Lon_deg'].astype(float) + df_latlon['Lon_mins'].
                     astype(float) + df_latlon['Lon_sec'])
+# Extract station ID for comparison
+df_latlon['Station'] = df_latlon['StationId'].str[-5:]
 
 
 def _dateparser(y, m, d, h, M):
@@ -231,3 +233,9 @@ final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
                                                          loc[df_new['Precip_h'] == '/'])
 # Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])
 # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h Precip_15h
+# Merge with latlon data
+final_df = final_df.merge(df_latlon, left_on='Station', right_on='Station')
+final_df['Lon'].loc[final_df['E_or_W'] == 'W'] = (final_df['Lon'].
+                                                  loc[final_df['E_or_W'] == 'W'] * (-1))
+final_df['Lat'].loc[final_df['N_or_S'] == 'S'] = (final_df['Lat'].
+                                                  loc[final_df['N_or_S'] == 'S'] * (-1))
