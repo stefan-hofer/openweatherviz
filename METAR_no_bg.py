@@ -13,6 +13,7 @@ from metpy.plots.wx_symbols import current_weather, sky_cover, wx_code_map
 from metpy.plots import StationPlot
 from os.path import expanduser
 import os
+from synop_read_data import synop_df
 # Request METAR data from TDS
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
 # ncdecoded/files/Surface_METAR_20171130_0000.nc')
@@ -99,6 +100,10 @@ def reduce_density(df, dens, projection='EU'):
     df = df[reduce_point_density(point_locs, dens)]
 
     return proj, point_locs, df
+
+
+df_synop = synop_df()
+df_synop_red = reduce_density(df_synop, 50000, 'GR')
 
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
