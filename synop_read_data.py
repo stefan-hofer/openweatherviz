@@ -76,6 +76,7 @@ def synop_df():
 
     # only valid station IDs
     df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
+    df = df[df['Minute'] == 0]
     try:
         df = df[df['Station'] != '00000']
     except TypeError:
@@ -132,6 +133,7 @@ def synop_df():
                                                                         .startswith(str(x))])
 
     df_new.fillna(value='XXXXX', inplace=True)
+    df_new = df_new.replace(r'^\s*$', 'XXXXX', regex=True)
     # Print all the stations with gusts >= 100 knots or m/s
     df_new['max_gust'][df_new['max_gust'].str.startswith('00')]
 
@@ -144,6 +146,8 @@ def synop_df():
     final_df['Station'] = df['Statindex']
     # Extract cloud cover
     final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
+    final_df['cloud_cover'] = (final_df['cloud_cover'].replace(np.nan, 10)
+                               .astype(int))
     # extract the wind direction and convert to degress
     final_df['dd'] = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
                                    replace('//', np.nan))) * 10
@@ -158,17 +162,23 @@ def synop_df():
     final_df['ff'] = ff.values
 
     # Extract Temperature and assign + or - by dividing through 10 or -10
-    final_df['TT'] = df_new['X1'].loc[df_new['X1'].str[1] == '0'].str[2:].astype(int)/10
-    final_df['TT'].loc[df_new['X1'].str[1] == '1'] = (df_new['X1'].loc[df_new['X1']
+    list_to_drop = ['XXXXX', '/////', '10///']
+    df_new['X1'].loc[df_new['X1'].str.contains('/', case=False)] = 'XXXXX'
+    df_new['XT'] = df_new['X1'][~df_new['X1'].isin(list_to_drop)]
+    final_df['TT'] = df_new['XT'].loc[df_new['XT'].str[1] == '0'].str[2:].astype(int)/10
+    final_df['TT'].loc[df_new['XT'].str[1] == '1'] = (df_new['XT'].loc[df_new['XT']
                                                       .str[1] == '1'].str[2:5].astype(int)/-10)
     # Extract Td and assign + or - sign
-    final_df['TD'] = df_new['X2'].loc[df_new['X2'].str[1] == '0'].str[2:].astype(int)/10
-    final_df['TD'].loc[df_new['X2'].str[1] == '1'] = (df_new['X2'].loc[df_new['X2']
+    list_to_drop = ['XXXXX', '/////', '20///']
+    df_new['X2'].loc[df_new['X2'].str.contains('/', case=False)] = 'XXXXX'
+    df_new['XTD'] = df_new['X2'][~df_new['X2'].isin(list_to_drop)]
+    final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1] == '0'].str[2:].astype(int)/10
+    final_df['TD'].loc[df_new['XTD'].str[1] == '1'] = (df_new['XTD'].loc[df_new['XTD']
                                                       .str[1] == '1'].str[2:5].astype(int)/-10)
 
     # Extract the station pressure
     list_to_drop = ['XXXXX', '/////', '30///']
-    df_new['X3'].loc[df_new['X3'].str.contains('///', case=False)] = 'XXXXX'
+    df_new['X3'].loc[df_new['X3'].str.contains('//', case=False)] = 'XXXXX'
     df_new['XP'] = df_new['X3'][~df_new['X3'].isin(list_to_drop)]
     final_df['PP'] = (df_new['XP'].loc[df_new['XP'].str[1] == '0'].str[1:]
                       .astype(int) + 10000)/10
@@ -178,7 +188,7 @@ def synop_df():
 
     # Extract the reduced sea level pressure
     list_to_drop = ['XXXXX', '/////', '30///', '48///']
-    df_new['X4'].loc[df_new['X4'].str.contains('///', case=False)] = 'XXXXX'
+    df_new['X4'].loc[df_new['X4'].str.contains('//', case=False)] = 'XXXXX'
     df_new['XSLP'] = df_new['X4'][~df_new['X4'].isin(list_to_drop)]
     final_df['SLP'] = (df_new['XSLP'].loc[df_new['XSLP'].str[1] == '0'].str[1:]
                        .astype(int) + 10000)/10
@@ -187,9 +197,12 @@ def synop_df():
                                                            == x].str[1:].astype(int)/10)
 
     # Extract the pressure tendency and assign - or +
-    list_to_drop = ['XXXXX', '/////', '5////']
-    df_new['X5'].loc[df_new['X5'].str.contains('/', case=False)] = 'XXXXX'
-    df_new['PT'] = df_new['X5'][~df_new['X5'].isin(list_to_drop)].str[2:].astype(int)/10
+    list_to_drop = ['XXXXX', 'XXX', '/////', '5////']
+    df_new['X5'] = df_new['X5'].str[2:]
+    df_new['X5'].loc[df_new['X5'].str.contains('/', case=False)] = 'XXX'
+    df_new['X5'] = df_new['X5'].replace(r'^\s*$', 'XXX', regex=True)
+    df_new['PT'] = df_new['X5'][~df_new['X5'].isin(list_to_drop)].astype(int)
+
     final_df['Ptendency'] = df_new['PT']
     for x in ['5', '6', '7', '8']:
         final_df['Ptendency'].loc[df_new['X5'].str[1] == x] = (final_df['Ptendency'].loc
@@ -197,21 +210,26 @@ def synop_df():
                                                                 == x] * (-1))
 
     # Extract the precipitation data
-    df_new['X6'].loc[df_new['X6'].str.contains('/', case=False)] = 'XXXXX'
-    df_new['RR'] = df_new['X6'][~df_new['X6'].isin(list_to_drop)].str[2:].astype(int)
+    # df_new['X6'] = df_new['X6'].str[2:]
+    # df_new['X6'].loc[df_new['X6'].str.contains('/', case=False)] = 'XXXXX'
+    # df_new['RR'] = df_new['X6'][~df_new['X6'].isin(list_to_drop)].str[2:].astype(int)
     # Apparently all the precip data is in '333' group
 
     # Extract current current weather
     list_to_drop = ['XX']
     df_new['Cweather'] = df_new['X7'].str[1:3]
     df_new['Cweather'].loc[df_new['Cweather'].str.contains('/', case=False)] = 'XX'
+    df_new['Cweather'] = df_new['Cweather'].replace(r'^\s*$', 'XX', regex=True)
     final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(list_to_drop)].astype(int)
+    final_df['ww'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
 
     # Extract past weather
     list_to_drop = ['XX']
     df_new['Pweather'] = df_new['X7'].str[3:5]
     df_new['Pweather'].loc[df_new['Pweather'].str.contains('/', case=False)] = 'XX'
+    df_new['Pweather'] = df_new['Pweather'].replace(r'^\s*$', 'XX', regex=True)
     final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
+    final_df['WW'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
 
     # Extract precip data
     df_climat.fillna('XXXXX', inplace=True)
