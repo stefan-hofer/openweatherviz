@@ -167,7 +167,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Same this time, but plot current weather to the left of center, using the
     # `current_weather` mapper to convert symbols to the right glyphs.
     stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
-    stationplot.plot_text((2, 0), df['Station'])
+    # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
