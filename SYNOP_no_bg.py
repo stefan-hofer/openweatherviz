@@ -4,12 +4,13 @@ import cartopy.crs as ccrs
 import cartopy.feature as feat
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
+import matplotlib.path as mpath
 import pandas as pd
 from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
-from metpy.plots.wx_symbols import current_weather, sky_cover, wx_code_map
+from metpy.plots.wx_symbols import current_weather, sky_cover
 from metpy.plots import StationPlot
 from os.path import expanduser
 import os
@@ -89,6 +90,9 @@ def reduce_density(df, dens, projection='EU'):
         proj = ccrs.LambertConformal(central_longitude=-35,
                                      central_latitude=65,
                                      standard_parallels=[35])
+    elif projection == 'Antarctica':
+        proj = ccrs.SouthPolarStereo()
+
     else:
         proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
                                      standard_parallels=[35])
@@ -112,7 +116,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # be appropriate for the station plot.
     u, v = get_wind_components(((df['ff'].values)*units('knots')),
                                (df['dd'].values * units.degree
-                               ))
+                                ))
     cloud_frac = df['cloud_cover']
     # Change the DPI of the resulting figure. Higher DPI drastically improves
     # look of the text rendering.
@@ -121,6 +125,15 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Create the figure and an axes set to the projection.
     fig = plt.figure(figsize=(20, 16))
     ax = fig.add_subplot(1, 1, 1, projection=proj)
+    if area == 'Antarctica':
+        ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
+        theta = np.linspace(0, 2*np.pi, 100)
+        center, radius = [0.5, 0.5], 0.5
+        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+        circle = mpath.Path(verts * radius + center)
+        ax.set_boundary(circle, transform=ax.transAxes)
+    else:
+        ax.set_extent((west, east, south, north))
     # # Set up a cartopy feature for state borders.
     state_boundaries = feat.NaturalEarthFeature(category='cultural',
                                                 name='admin_0_countries',
@@ -131,7 +144,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     ax.add_feature(state_boundaries, zorder=1, edgecolor='black')
     # ax.add_feature(cartopy.feature.OCEAN, zorder=0)
     # Set plot bounds
-    ax.set_extent((west, east, south, north))
+
     # Start the station plot by specifying the axes to draw on, as well as the
     # lon/lat of the stations (with transform). We also the fontsize to 12 pt.
     stationplot = StationPlot(ax, df['longitude'].values,
@@ -171,19 +184,27 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
-    plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
-                bbox_inches='tight', transparent="True", pad_inches=0)
+    if area == 'Antarctica':
+        plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
+                    bbox_inches='tight', pad_inches=0)
+    else:
+        plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
+                    bbox_inches='tight', transparent="True", pad_inches=0)
 
 
 df_synop = synop_df()
 proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
 plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                      south=58, north=70.5,  fonts=14)
+                  south=58, north=70.5,  fonts=16)
 
 proj, point_locs, df_synop_red = reduce_density(df_synop, 40000)
 plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                  south=50.1, north=58.4,  fonts=13)
+                  south=50.1, north=58.4,  fonts=11)
 
 proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
 plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
                   south=45.9, north=49.4, fonts=12)
+
+proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
+plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
+                  south=-90, north=-60.0,  fonts=16)

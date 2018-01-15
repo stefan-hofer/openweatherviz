@@ -35,10 +35,10 @@ def synop_df():
     df_latlon['Lon_sec'] = df_latlon['Lon_sec'].astype(float) / (60**2)
 
     df_latlon['latitude'] = (df_latlon['Lat_deg'].astype(float) + df_latlon['Lat_mins'].
-                        astype(float) + df_latlon['Lat_sec'])
+                             astype(float) + df_latlon['Lat_sec'])
 
     df_latlon['longitude'] = (df_latlon['Lon_deg'].astype(float) + df_latlon['Lon_mins'].
-                        astype(float) + df_latlon['Lon_sec'])
+                              astype(float) + df_latlon['Lon_sec'])
     # Extract station ID for comparison
     df_latlon['Station'] = df_latlon['StationId'].str[-5:]
 
@@ -56,7 +56,6 @@ def synop_df():
         df.fillna(value=np.nan, inplace=True)
         # df_report.fillna(value=np.nan, inplace=True)
         return df
-
 
     def load_report(filename):
         fields = ['PARTE']
@@ -174,7 +173,8 @@ def synop_df():
     df_new['XTD'] = df_new['X2'][~df_new['X2'].isin(list_to_drop)]
     final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1] == '0'].str[2:].astype(int)/10
     final_df['TD'].loc[df_new['XTD'].str[1] == '1'] = (df_new['XTD'].loc[df_new['XTD']
-                                                      .str[1] == '1'].str[2:5].astype(int)/-10)
+                                                       .str[1] == '1'].str[2:5]
+                                                       .astype(int)/-10)
 
     # Extract the station pressure
     list_to_drop = ['XXXXX', '/////', '30///']
@@ -189,12 +189,14 @@ def synop_df():
     # Extract the reduced sea level pressure
     list_to_drop = ['XXXXX', '/////', '30///', '48///']
     df_new['X4'].loc[df_new['X4'].str.contains('//', case=False)] = 'XXXXX'
+    df_new['X4'].loc[df_new['X4'].str.contains('\*', case=False)] = 'XXXXX'
     df_new['XSLP'] = df_new['X4'][~df_new['X4'].isin(list_to_drop)]
     final_df['SLP'] = (df_new['XSLP'].loc[df_new['XSLP'].str[1] == '0'].str[1:]
                        .astype(int) + 10000)/10
     for x in ['9', '8', '7']:
-        final_df['SLP'].loc[df_new['XSLP'].str[1] == x] = (df_new['XSLP'].loc[df_new['XSLP'].str[1]
-                                                           == x].str[1:].astype(int)/10)
+        final_df['SLP'].loc[df_new['XSLP'].str[1] == x] = (df_new['XSLP'].loc[df_new['XSLP']
+                                                           .str[1] == x].str[1:]
+                                                           .astype(int)/10)
 
     # Extract the pressure tendency and assign - or +
     list_to_drop = ['XXXXX', 'XXX', '/////', '5////']
@@ -250,12 +252,15 @@ def synop_df():
     final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
                                                              loc[df_new['Precip_h'] == '/'])
     # Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])
-    # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h Precip_15h
+    # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h
+    # Precip_15h
     # Merge with latlon data
     final_df = final_df.merge(df_latlon, left_on='Station', right_on='Station')
     final_df['longitude'].loc[final_df['E_or_W'] == 'W'] = (final_df['longitude'].
-                                                      loc[final_df['E_or_W'] == 'W'] * (-1))
+                                                            loc[final_df['E_or_W'] == 'W']
+                                                            * (-1))
     final_df['latitude'].loc[final_df['N_or_S'] == 'S'] = (final_df['latitude'].
-                                                      loc[final_df['N_or_S'] == 'S'] * (-1))
+                                                           loc[final_df['N_or_S'] == 'S']
+                                                           * (-1))
 
     return final_df
