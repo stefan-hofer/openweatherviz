@@ -92,6 +92,8 @@ def reduce_density(df, dens, projection='EU'):
                                      standard_parallels=[35])
     elif projection == 'Antarctica':
         proj = ccrs.SouthPolarStereo()
+    elif projection == 'Arctic':
+        proj = ccrs.NorthPolarStereo()
 
     else:
         proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
@@ -109,7 +111,30 @@ def reduce_density(df, dens, projection='EU'):
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                       south=42, north=62, fonts=14):
     df = df_t
+    plt.rcParams['savefig.dpi'] = 300
+    # =========================================================================
+    # Create the figure and an axes set to the projection.
+    fig = plt.figure(figsize=(20, 16))
+    ax = fig.add_subplot(1, 1, 1, projection=proj)
+    if area == 'Antarctica':
+        df = df.loc[df['latitude'] < north]
+        ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
+        theta = np.linspace(0, 2*np.pi, 100)
+        center, radius = [0.5, 0.5], 0.5
+        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+        circle = mpath.Path(verts * radius + center)
+        ax.set_boundary(circle, transform=ax.transAxes)
+    elif area == 'Arctic':
+        df = df.loc[df['latitude'] > south]
+        ax.set_extent([-180, 180, 60, 90], ccrs.PlateCarree())
+        theta = np.linspace(0, 2*np.pi, 100)
+        center, radius = [0.5, 0.5], 0.5
+        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
+        circle = mpath.Path(verts * radius + center)
+        ax.set_boundary(circle, transform=ax.transAxes)
 
+    else:
+        ax.set_extent((west, east, south, north))
     wx2 = df['ww'].fillna(00).astype(int)
     wx2 = wx2.values.tolist()
     # Get the wind components, converting from m/s to knots as will
@@ -120,21 +145,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     cloud_frac = df['cloud_cover']
     # Change the DPI of the resulting figure. Higher DPI drastically improves
     # look of the text rendering.
-    plt.rcParams['savefig.dpi'] = 300
-    # =========================================================================
-    # Create the figure and an axes set to the projection.
-    fig = plt.figure(figsize=(20, 16))
-    ax = fig.add_subplot(1, 1, 1, projection=proj)
-    if area == 'Antarctica':
-        ax.set_extent([-180, 180, -90, -60], ccrs.PlateCarree())
-        theta = np.linspace(0, 2*np.pi, 100)
-        center, radius = [0.5, 0.5], 0.5
-        verts = np.vstack([np.sin(theta), np.cos(theta)]).T
-        circle = mpath.Path(verts * radius + center)
-        ax.set_boundary(circle, transform=ax.transAxes)
-    else:
-        ax.set_extent((west, east, south, north))
-    # # Set up a cartopy feature for state borders.
+
+    # Set up a cartopy feature for state borders.
     state_boundaries = feat.NaturalEarthFeature(category='cultural',
                                                 name='admin_0_countries',
                                                 scale='10m',
@@ -162,14 +174,18 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # values are plotted. This uses the standard trailing 3-digits of
     # the pressure value in tenths of millibars.
 
-    p = stationplot.plot_parameter('NE', df['SLP'],
-                                   formatter=lambda v:
-                                   format(10 * v, '.0f')[-3:],
-                                   color="#a2cffe")
-
-    for x in [Temp, Td, p]:
-        x.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                           foreground='black'), path_effects.Normal()])
+    if (area != 'Antarctica' and area != 'Arctic'):
+        p = stationplot.plot_parameter('NE', df['SLP'],
+                                       formatter=lambda v:
+                                       format(10 * v, '.0f')[-3:],
+                                       color="#a2cffe")
+        for x in [Temp, Td, p]:
+            x.set_path_effects([path_effects.Stroke(linewidth=1.5,
+                               foreground='black'), path_effects.Normal()])
+    else:
+        for x in [Temp, Td]:
+            x.set_path_effects([path_effects.Stroke(linewidth=1.5,
+                               foreground='black'), path_effects.Normal()])
 
     # Add wind barbs
     stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
@@ -184,7 +200,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
-    if area == 'Antarctica':
+
+    if (area == 'Antarctica' or area == 'Arctic'):
         plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
                     bbox_inches='tight', pad_inches=0)
     else:
@@ -192,7 +209,18 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                     bbox_inches='tight', transparent="True", pad_inches=0)
 
 
-df_synop = synop_df()
+attempts = 0
+success = False
+while attempts <= 5 and not success:
+    try:
+        df_synop = synop_df()
+        success = True
+    except ValueError:
+        attempts += 1
+        print('Not the right amount of columns, trying for the {} time'
+              .format(attempts))
+
+
 proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
 plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                   south=58, north=70.5,  fonts=16)
@@ -208,3 +236,7 @@ plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.4
 proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
 plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
                   south=-90, north=-60.0,  fonts=16)
+
+proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
+plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
+                  south=60, north=90.0,  fonts=14)
