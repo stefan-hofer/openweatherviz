@@ -65,7 +65,73 @@ def url_last_hour(state=None, lang='eng', header='yes'):
     end_str = now.strftime('%Y%m%d%H%M')
     save_str = datetime(now.year, now.month, now.day, now.hour, 00)
     save_str = save_str.strftime('%Y%m%d%H%M')
-    start = datetime(now.year, now.month, now.day, now.hour-1, 29)
+    start = datetime(now.year, now.month, now.day, now.hour-1, 31)
+    start_str = start.strftime('%Y%m%d%H%M')
+    # set up the paths and test for existence
+    path = expanduser('~') + '/Documents/Synop_data'
+    try:
+        os.listdir(path)
+    except FileNotFoundError:
+        os.mkdir(path)
+        print('Created the path {}'.format(path))
+
+    if state is None:
+        path = path + '/synop_' + save_str + '.csv'
+    else:
+        path = path + '/synop_' + save_str + '_' + state + '.csv'
+
+    list_names = ['begin', 'end', 'lang', 'header', 'state']
+    lis = [x for x in [start_str, end_str, lang, header, state]]
+    dic = {}
+    for name, val in zip(list_names, lis):
+        if (val == 'N' or val == 'n' or val is None):
+            pass
+        else:
+            dic[name] = val
+    url = 'http://www.ogimet.com/cgi-bin/getsynop?'
+    i = 0
+    for key, value in dic.items():
+        print(key)
+        print(value)
+        if i == 0:
+            url += key
+        else:
+            url += '&'+key
+        url += '='+value
+        i += 1
+        print(url)
+
+    return url, path
+
+
+def url_any_hour(year=None, month=None, day=None, hour=None, state=None, lang='eng',
+                 header='yes'):
+    '''
+    Function to create the url for provided (full hour) synop download from
+    Ogimet.
+
+    Arguments:
+    ----------
+    year=None, month=None, day=None, hour=None, state=None, state = None, lang =
+    'eng', header = 'yes'
+
+    Returns:
+    --------
+    url (to download file)
+    path (to save the file)
+
+    Examples:
+    ---------
+    from synop_download import url_any_hour
+    url, path = url_any_hour()
+
+    '''
+    # Create the dates and strings
+    now = datetime(year, month, day, hour, 29)
+    end_str = now.strftime('%Y%m%d%H%M')
+    save_str = datetime(year, month, day, hour, 00)
+    save_str = save_str.strftime('%Y%m%d%H%M')
+    start = datetime(year, month, day, hour-1, 31)
     start_str = start.strftime('%Y%m%d%H%M')
     # set up the paths and test for existence
     path = expanduser('~') + '/Documents/Synop_data'

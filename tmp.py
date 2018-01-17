@@ -17,9 +17,43 @@ from os.path import expanduser
 import os
 from synop_read_data import synop_df
 
+# Request METAR data from TDS
+# os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
+# ncdecoded/files/Surface_METAR_20171130_0000.nc')
+
+# set up the paths and test for existence
+path = expanduser('~') + '/Documents/Metar_plots'
+try:
+    os.listdir(path)
+except FileNotFoundError:
+    os.mkdir(path)
+
+
+def reduce_density(df, dens, projection='EU'):
+    if projection == 'GR':
+        proj = ccrs.LambertConformal(central_longitude=-35,
+                                     central_latitude=65,
+                                     standard_parallels=[35])
+    elif projection == 'Antarctica':
+        proj = ccrs.SouthPolarStereo()
+    elif projection == 'Arctic':
+        proj = ccrs.NorthPolarStereo()
+
+    else:
+        proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
+                                     standard_parallels=[35])
+    # Use the cartopy map projection to transform station locations to the map
+    # and then refine the number of stations plotted by setting a 300km radius
+    point_locs = proj.transform_points(ccrs.PlateCarree(),
+                                       df['longitude'].values,
+                                       df['latitude'].values)
+    df = df[reduce_point_density(point_locs, dens)]
+
+    return proj, point_locs, df
+
 
 def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14, cm='gist_ncar'):
+                         south=42, north=62, fonts=14, cm='gist_ncar'):
     df = df_t
     plt.rcParams['savefig.dpi'] = 300
     # =========================================================================
@@ -63,23 +97,38 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     df = df.reset_index()
     cmap = matplotlib.cm.get_cmap(cm)
     norm = matplotlib.colors.Normalize(vmin=-30.0, vmax=30.0)
-    color = list(cmap(norm(df['TT'].values)))
     # Start the station plot by specifying the axes to draw on, as well as the
     # lon/lat of the stations (with transform). We also the fontsize to 12 pt.
     index = 0
     a = np.arange(-30, 30, 1)
     for x in a:
+        if index == 0:
+            df_min = df.loc[df['TT'] < min(a)]
+            df_max = df.loc[df['TT'] > max(a)]
+            j = 0
+            list_ex = [min(a)-5, max(a)+5]
+            for arr in [df_min, df_max]:
+                stationplot = StationPlot(ax, arr['longitude'],
+                                          arr['latitude'], clip_on=True,
+                                          transform=ccrs.PlateCarree(), fontsize=fonts)
+                Temp = stationplot.plot_parameter('NW', arr['TT'],
+                                                  color=cmap(norm(list_ex[j])))
+                try:
+                    Temp.set_path_effects([path_effects.Stroke(linewidth=1.5,
+                                          foreground='black'), path_effects.Normal()])
+                except AttributeError:
+                    pass
+        # slice out values between x and x+1
         df_cur = df.loc[(df['TT'] < x+1) & (df['TT'] >= x)]
         stationplot = StationPlot(ax, df_cur['longitude'],
                                   df_cur['latitude'], clip_on=True,
                                   transform=ccrs.PlateCarree(), fontsize=fonts)
-        # Plot the temperature and dew point to the upper and lower left,
-        # respectively, of the center point. Each one uses a different color.
+        # plot the sliced values with a different color for each loop
         Temp = stationplot.plot_parameter('NW', df_cur['TT'],
-                                   color=cmap(norm(x+0.5)))
+                                          color=cmap(norm(x+0.5)))
         try:
             Temp.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                           foreground='black'), path_effects.Normal()])
+                                  foreground='black'), path_effects.Normal()])
         except AttributeError:
             pass
         print('x={} done correctly '.format(x))
@@ -87,19 +136,55 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # fontweight = 'bold'
     # More complex ex. uses custom formatter to control how sea-level pressure
     # values are plotted. This uses the standard trailing 3-digits of
-    # the pressure value in tenths of millibars.
+# the pressure value in tenths of millibars.
+    stationplot = StationPlot(ax, df['longitude'].values,
+                              df['latitude'].values, clip_on=True,
+                              transform=ccrs.PlateCarree(), fontsize=fonts)
+    try:
+        u, v = get_wind_components(((df['ff'].values) * units('knots')),
+                                   (df['dd'].values * units.degree
+                                    ))
+        cloud_frac = df['cloud_cover']
+        if area != 'Arctic':
+            stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
+            stationplot.plot_symbol('C', cloud_frac, sky_cover)
+        stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+        print(u, v)
+    except (ValueError, TypeError) as error:
+        pass
 
-
-
-    stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
 
     if (area == 'Antarctica' or area == 'Arctic'):
-        plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
+        plt.savefig(path + '/CURR_SYNOP_color_'+area+'.png',
                     bbox_inches='tight', pad_inches=0)
     else:
-        plt.savefig(path + '/CURR_SYNOP_'+area+'.png',
+        plt.savefig(path + '/CURR_SYNOP_color_'+area+'.png',
                     bbox_inches='tight', transparent="True", pad_inches=0)
+
+
+if __name__ == '__main__':
+    attempts = 0
+    success = False
+    while attempts <= 5 and not success:
+        try:
+            df_synop = synop_df()
+            success = True
+        except ValueError:
+            attempts += 1
+            print('Not the right amount of columns, trying for the {} time'
+                  .format(attempts))
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 110000, 'Antarctica')
+    plot_map_temperature(proj, point_locs, df_synop_red, area='Antarctica', west=-180,
+                         east=180, south=-90, north=-60.0,  fonts=16)
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
+    plot_map_temperature(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
+                         south=60, north=90.0,  fonts=20)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    plot_map_temperature(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
+                         south=50.1, north=58.4,  fonts=19)

@@ -1,5 +1,6 @@
 from datetime import datetime
 import numpy as np
+import time
 import cartopy.crs as ccrs
 import cartopy.feature as feat
 import matplotlib.pyplot as plt
@@ -15,6 +16,7 @@ from metpy.plots import StationPlot
 from os.path import expanduser
 import os
 from synop_read_data import synop_df
+from synop_download import url_last_hour, url_any_hour, download_and_save
 # Request METAR data from TDS
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
 # ncdecoded/files/Surface_METAR_20171130_0000.nc')
@@ -109,7 +111,16 @@ def reduce_density(df, dens, projection='EU'):
 
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14):
+                      south=42, north=62, fonts=14, path=None):
+    if path is None:
+        # set up the paths and test for existence
+        path = expanduser('~') + '/Documents/Metar_plots'
+        try:
+            os.listdir(path)
+        except FileNotFoundError:
+            os.mkdir(path)
+    else:
+        path = path
     df = df_t
     plt.rcParams['savefig.dpi'] = 300
     # =========================================================================
@@ -209,34 +220,45 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                     bbox_inches='tight', transparent="True", pad_inches=0)
 
 
-attempts = 0
-success = False
-while attempts <= 5 and not success:
-    try:
-        df_synop = synop_df()
-        success = True
-    except ValueError:
-        attempts += 1
-        print('Not the right amount of columns, trying for the {} time'
-              .format(attempts))
+if __name__ == '__main__':
 
+    attempts = 0
+    success = False
+    while attempts <= 5 and not success:
+        try:
+            df_synop = synop_df()
+            success = True
+        except ValueError:
+            attempts += 1
+            print('Not the right amount of columns, trying for the {} time'
+                  .format(attempts))
+            time.sleep(2)
+    # if specific date
+    url, path = url_any_hour(2007, 1, 18, 8)
+    download_and_save(path, url)
+    df_synop = synop_df(path)
 
-proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
-plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                  south=58, north=70.5,  fonts=16)
+    # if last hour
+    url, path = url_last_hour()
+    download_and_save(path, url)
+    df_synop = synop_df(path)
 
-proj, point_locs, df_synop_red = reduce_density(df_synop, 40000)
-plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                  south=50.1, north=58.4,  fonts=11)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
+    plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
+                      south=58, north=70.5,  fonts=16)
 
-proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
-plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
-                  south=45.9, north=49.4, fonts=12)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
+                      south=50.1, north=58.4,  fonts=11)
 
-proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
-plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
-                  south=-90, north=-60.0,  fonts=16)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
+                      south=45.9, north=49.4, fonts=12)
 
-proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
-plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
-                  south=60, north=90.0,  fonts=14)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
+    plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
+                      south=-90, north=-60.0,  fonts=16)
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
+    plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
+                      south=60, north=90.0,  fonts=14)

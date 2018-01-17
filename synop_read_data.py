@@ -1,15 +1,11 @@
 import datetime as dt
 import pandas as pd
 import numpy as np
-from synop_download import url_last_hour, download_and_save
+from synop_download import url_last_hour, url_any_hour, download_and_save
 from metpy.units import units
 
 
-def synop_df():
-
-    url, path = url_last_hour()
-    download_and_save(path, url)
-
+def synop_df(path):
     # Load lat lon dataset
     fields = ['RegionId', 'RegionName', 'CountryArea', 'CountryCode', 'StationId',
               'IndexNbr', 'IndexSubNbr', 'StationName', 'Latitude', 'Longitude', 'Hp',
@@ -144,9 +140,13 @@ def synop_df():
     final_df = pd.DataFrame()
     final_df['Station'] = df['Statindex']
     # Extract cloud cover
-    final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
-    final_df['cloud_cover'] = (final_df['cloud_cover'].replace(np.nan, 10)
-                               .astype(int))
+    df['clouds'] = df['Nddff'].str[0].fillna('/')
+    df['clouds'].loc[df['clouds'].str.contains('\D')] = '/'
+    final_df['cloud_cover'] = df['clouds'].replace('/', 10).astype(int)
+
+    # final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
+    # final_df['cloud_cover'] = (final_df['cloud_cover'].replace(np.nan, 10)
+    #                            .astype(int))
     # extract the wind direction and convert to degress
     final_df['dd'] = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
                                    replace('//', np.nan))) * 10
@@ -161,15 +161,17 @@ def synop_df():
     final_df['ff'] = ff.values
 
     # Extract Temperature and assign + or - by dividing through 10 or -10
-    list_to_drop = ['XXXXX', '/////', '10///']
-    df_new['X1'].loc[df_new['X1'].str.contains('/', case=False)] = 'XXXXX'
+    list_to_drop = ['XXXXX', '/////', '10///', '10']
+    df_new['X1'].loc[df_new['X1'].str.contains('\D')] = 'XXXXX'
+    df_new['X1'] = df_new['X1'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XT'] = df_new['X1'][~df_new['X1'].isin(list_to_drop)]
     final_df['TT'] = df_new['XT'].loc[df_new['XT'].str[1] == '0'].str[2:].astype(int)/10
     final_df['TT'].loc[df_new['XT'].str[1] == '1'] = (df_new['XT'].loc[df_new['XT']
                                                       .str[1] == '1'].str[2:5].astype(int)/-10)
     # Extract Td and assign + or - sign
-    list_to_drop = ['XXXXX', '/////', '20///']
-    df_new['X2'].loc[df_new['X2'].str.contains('/', case=False)] = 'XXXXX'
+    list_to_drop = ['XXXXX', '/////', '20///', '20']
+    df_new['X2'].loc[df_new['X2'].str.contains('\D')] = 'XXXXX'
+    df_new['X2'] = df_new['X2'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XTD'] = df_new['X2'][~df_new['X2'].isin(list_to_drop)]
     final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1] == '0'].str[2:].astype(int)/10
     final_df['TD'].loc[df_new['XTD'].str[1] == '1'] = (df_new['XTD'].loc[df_new['XTD']
@@ -202,6 +204,7 @@ def synop_df():
     list_to_drop = ['XXXXX', 'XXX', '/////', '5////']
     df_new['X5'] = df_new['X5'].str[2:]
     df_new['X5'].loc[df_new['X5'].str.contains('/', case=False)] = 'XXX'
+    df_new['X5'].loc[df_new['X5'].str.contains('\D')] = 'XXXXX'
     df_new['X5'] = df_new['X5'].replace(r'^\s*$', 'XXX', regex=True)
     df_new['PT'] = df_new['X5'][~df_new['X5'].isin(list_to_drop)].astype(int)
 
