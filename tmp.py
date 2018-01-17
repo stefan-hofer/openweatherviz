@@ -16,6 +16,7 @@ from metpy.plots import StationPlot
 from os.path import expanduser
 import os
 from synop_read_data import synop_df
+from synop_download import url_last_hour, url_any_hour, download_and_save
 
 # Request METAR data from TDS
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
@@ -53,7 +54,16 @@ def reduce_density(df, dens, projection='EU'):
 
 
 def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                         south=42, north=62, fonts=14, cm='gist_ncar'):
+                         south=42, north=62, fonts=14, cm='gist_ncar', path=None):
+    if path is None:
+        # set up the paths and test for existence
+        path = expanduser('~') + '/Documents/Metar_plots'
+        try:
+            os.listdir(path)
+        except FileNotFoundError:
+            os.mkdir(path)
+    else:
+        path = path
     df = df_t
     plt.rcParams['savefig.dpi'] = 300
     # =========================================================================
@@ -148,6 +158,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
         if area != 'Arctic':
             stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
             stationplot.plot_symbol('C', cloud_frac, sky_cover)
+            # stationplot.plot_text((2, 0), df['Station'])
         stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
         print(u, v)
     except (ValueError, TypeError) as error:
@@ -171,7 +182,9 @@ if __name__ == '__main__':
     success = False
     while attempts <= 5 and not success:
         try:
-            df_synop = synop_df()
+            url, path = url_last_hour()
+            download_and_save(path, url)
+            df_synop = synop_df(path)
             success = True
         except ValueError:
             attempts += 1

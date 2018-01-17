@@ -233,10 +233,10 @@ if __name__ == '__main__':
             print('Not the right amount of columns, trying for the {} time'
                   .format(attempts))
             time.sleep(2)
-    # if specific date
-    url, path = url_any_hour(2007, 1, 18, 8)
-    download_and_save(path, url)
-    df_synop = synop_df(path)
+    # # if specific date
+    # url, path = url_any_hour(2007, 1, 18, 6)
+    # download_and_save(path, url)
+    # df_synop = synop_df(path)
 
     # if last hour
     url, path = url_last_hour()

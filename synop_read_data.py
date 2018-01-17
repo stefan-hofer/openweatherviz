@@ -72,6 +72,7 @@ def synop_df(path):
     # only valid station IDs
     df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
     df = df[df['Minute'] == 0]
+    df = df[~df['Station'].str.contains('\D')]
     try:
         df = df[df['Station'] != '00000']
     except TypeError:
@@ -144,21 +145,24 @@ def synop_df(path):
     df['clouds'].loc[df['clouds'].str.contains('\D')] = '/'
     final_df['cloud_cover'] = df['clouds'].replace('/', 10).astype(int)
 
-    # final_df['cloud_cover'] = (df['Nddff'].str[0].replace('/', np.nan)).fillna(np.nan)
-    # final_df['cloud_cover'] = (final_df['cloud_cover'].replace(np.nan, 10)
-    #                            .astype(int))
     # extract the wind direction and convert to degress
-    final_df['dd'] = pd.to_numeric(((df['Nddff'].str[1:3].str.replace(r'(^.*/.*$)', '//')).
-                                   replace('//', np.nan))) * 10
+    df['dd'] = df['Nddff'].str[1:3].fillna('//')
+    df['dd'].loc[df['dd'].str.contains('\D')] = '//'
+    final_df['dd'] = (pd.to_numeric(df['dd'].replace('//', np.nan))) * 10
 
     # Identify if wind obs. is in m/s (0,1) or knots (3,4)
     identifier = df['Dat'].str[4]
     # Extract wind speed and check for units. Convert all to knots
-    ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
-                        .replace('//', np.nan))).fillna(np.nan)
-    # syntax to change only a subset of the df
+    df['ff'] = df['Nddff'].str[3:5].fillna('//')
+    df['ff'].loc[df['ff'].str.contains('\D')] = '//'
+    ff = pd.to_numeric(df['ff'].replace('//', np.nan))
     (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
     final_df['ff'] = ff.values
+    # ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
+    #                     .replace('//', np.nan))).fillna(np.nan)
+    # syntax to change only a subset of the df
+    # (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+    # final_df['ff'] = ff.values
 
     # Extract Temperature and assign + or - by dividing through 10 or -10
     list_to_drop = ['XXXXX', '/////', '10///', '10']
@@ -265,5 +269,9 @@ def synop_df(path):
     final_df['latitude'].loc[final_df['N_or_S'] == 'S'] = (final_df['latitude'].
                                                            loc[final_df['N_or_S'] == 'S']
                                                            * (-1))
+    df_test = df[['Statindex', 'time']]
+    final_df = final_df.merge(df_test, left_on='Station', right_on='Statindex')
+    # Round time to nearest hour
+    final_df['time'] = final_df['time'].dt.round('60min')
 
     return final_df
