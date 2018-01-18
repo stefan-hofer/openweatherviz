@@ -11,7 +11,7 @@ from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
-from metpy.plots.wx_symbols import current_weather, sky_cover
+from metpy.plots.wx_symbols import current_weather, current_weather_auto, sky_cover
 from metpy.plots import StationPlot
 from os.path import expanduser
 import os
@@ -146,8 +146,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
 
     else:
         ax.set_extent((west, east, south, north))
-    wx2 = df['ww'].fillna(00).astype(int)
-    wx2 = wx2.values.tolist()
+
+
     # Get the wind components, converting from m/s to knots as will
     # be appropriate for the station plot.
     u, v = get_wind_components(((df['ff'].values)*units('knots')),
@@ -206,7 +206,18 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     stationplot.plot_symbol('C', cloud_frac, sky_cover)
     # Same this time, but plot current weather to the left of center, using the
     # `current_weather` mapper to convert symbols to the right glyphs.
-    stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+    for val in range(0, 2):
+        wx = df[['ww', 'StationType']]
+        if val == 0:
+            # mask all the unmanned stations
+            wx['ww'].loc[wx['StationType'] > 3] = np.nan
+            wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
+            stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+        else:
+            # mask all the manned stations
+            wx['ww'].loc[wx['StationType'] <= 3] = np.nan
+            wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
+            stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments

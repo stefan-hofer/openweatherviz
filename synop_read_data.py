@@ -145,11 +145,14 @@ def synop_df(path):
     df['clouds'].loc[df['clouds'].str.contains('\D')] = '/'
     final_df['cloud_cover'] = df['clouds'].replace('/', 10).astype(int)
 
+    # Retrieve if station is automatic or manned
+    df['StationType'] = df['iihVV'].str[1].fillna('/')
+    df['StationType'].loc[df['StationType'].str.contains('\D')] = '/'
+    final_df['StationType'] = pd.to_numeric(df['StationType'].replace('/'), np.nan)
     # extract the wind direction and convert to degress
     df['dd'] = df['Nddff'].str[1:3].fillna('//')
     df['dd'].loc[df['dd'].str.contains('\D')] = '//'
     final_df['dd'] = (pd.to_numeric(df['dd'].replace('//', np.nan))) * 10
-
     # Identify if wind obs. is in m/s (0,1) or knots (3,4)
     identifier = df['Dat'].str[4]
     # Extract wind speed and check for units. Convert all to knots
