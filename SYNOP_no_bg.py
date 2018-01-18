@@ -256,9 +256,9 @@ if __name__ == '__main__':
     # df_synop = synop_df(path)
 
     # if last hour
-    url, path = url_last_hour()
-    download_and_save(path, url)
-    df_synop, df_climat = synop_df(path)
+    # url, path = url_last_hour()
+    # download_and_save(path, url)
+    # df_synop, df_climat = synop_df(path)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
