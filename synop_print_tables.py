@@ -21,10 +21,11 @@ def print_table(df):
                      align=['left'] * 5),
                      cells=dict(values=[df.TT, df.Hha, df.StationName, df.CountryCode],
                      fill=dict(color='#F5F8FF'),
-                     align = ['left'] * 5))
+                     align=['left'] * 5))
 
     data = [trace]
-    py.iplot(data, filename = 'pandas_table')
+    py.iplot(data, filename='pandas_table')
+
 
 if __name__ == '__main__':
     print_table(small)
