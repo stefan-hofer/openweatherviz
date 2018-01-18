@@ -8,11 +8,11 @@ import pandas as pd
 url, path = url_last_hour()
 url, path = url_any_hour(2018, 1, 17, 18)
 download_and_save(path, url)
-df_synop = synop_df(path)
+df_synop, df_climat = synop_df(path)
 
 
 df_synop = df_synop.drop_duplicates('Station')
-small = (df_synop.loc[df_synop.latitude >= 66].nsmallest
+small = (df_synop.loc[df_synop.latitude >= 63].nsmallest
          (10, 'TT')[['TT', 'TD', 'ff', 'StationName', 'CountryCode', 'Station',
                     'Hha', 'latitude', 'longitude']])
 
@@ -34,11 +34,11 @@ def print_table(df, title='_small', plot_title='<b>Minimum Temperature Arctic (1
 
     data = [trace]
     fig = go.Figure(data=data, layout=layout)
-    py.iplot(data, filename='pandas_table')
+    py.iplot(fig, filename='pandas_table' + title)
     filename = '/home/sh16450/Documents/Metar_plots/table' + title + '.png'
     py.image.save_as(fig, filename=filename)
 
 
 if __name__ == '__main__':
-    print_table(small)
-    print_table(big, title='_large', plot_title='<b>Maximum Temperature Arctic (15 UTC)</b>')
+    print_table(small, plot_title='<b>Minimum Temperature Arctic (18 UTC)</b>')
+    print_table(big, title='_large', plot_title='<b>Maximum Temperature Arctic (18 UTC)</b>')

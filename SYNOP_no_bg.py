@@ -88,14 +88,14 @@ def get_data(ncss, query, density=50000.):
 
 
 def reduce_density(df, dens, projection='EU'):
-    if projection == 'GR':
+    if (projection == 'GR') or (projection == 'Arctic'):
         proj = ccrs.LambertConformal(central_longitude=-35,
                                      central_latitude=65,
                                      standard_parallels=[35])
     elif projection == 'Antarctica':
         proj = ccrs.SouthPolarStereo()
-    elif projection == 'Arctic':
-        proj = ccrs.NorthPolarStereo()
+    # elif projection == 'Arctic':
+    #     proj = ccrs.NorthPolarStereo()
 
     else:
         proj = ccrs.LambertConformal(central_longitude=13, central_latitude=47,
@@ -106,6 +106,8 @@ def reduce_density(df, dens, projection='EU'):
                                        df['longitude'].values,
                                        df['latitude'].values)
     df = df[reduce_point_density(point_locs, dens)]
+    if projection == 'Arctic':
+        proj = ccrs.NorthPolarStereo()
 
     return proj, point_locs, df
 
