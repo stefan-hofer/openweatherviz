@@ -11,7 +11,7 @@ from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
-from metpy.plots.wx_symbols import current_weather, sky_cover
+from metpy.plots.wx_symbols import current_weather, sky_cover, current_weather_auto
 from metpy.plots import StationPlot
 from os.path import expanduser
 import os
@@ -89,9 +89,6 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
 
     else:
         ax.set_extent((west, east, south, north))
-    wx2 = df['ww'].fillna(00).astype(int)
-    wx2 = wx2.values.tolist()
-
     # Set up a cartopy feature for state borders.
     state_boundaries = feat.NaturalEarthFeature(category='cultural',
                                                 name='admin_0_countries',
@@ -159,7 +156,22 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
             stationplot.plot_symbol('C', cloud_frac, sky_cover)
             # stationplot.plot_text((2, 0), df['Station'])
-        stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+
+        for val in range(0, 2):
+            wx = df[['ww', 'StationType']]
+            if val == 0:
+                # mask all the unmanned stations
+                wx['ww'].loc[wx['StationType'] > 3] = np.nan
+                wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
+                stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+            else:
+                # mask all the manned stations
+                wx['ww'].loc[(wx['StationType'] <= 3)] = np.nan
+                # mask all reports smaller than 9
+                # =7 is an empty symbol!
+                wx['ww'].loc[wx['ww'] <= 9] = 7
+                wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
+                stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
         print(u, v)
     except (ValueError, TypeError) as error:
         pass
@@ -184,7 +196,7 @@ if __name__ == '__main__':
         try:
             url, path = url_last_hour()
             download_and_save(path, url)
-            df_synop = synop_df(path)
+            df_synop, df_climat = synop_df(path)
             success = True
         except ValueError:
             attempts += 1
@@ -197,7 +209,7 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
     plot_map_temperature(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
-                         south=60, north=90.0,  fonts=20)
+                         south=60, north=90.0,  fonts=19)
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_temperature(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                         south=50.1, north=58.4,  fonts=19)
+                         south=50.1, north=58.4,  fonts=17)

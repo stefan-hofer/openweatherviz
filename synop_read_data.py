@@ -71,8 +71,9 @@ def synop_df(path):
 
     # only valid station IDs
     df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
-    df = df[df['Minute'] == 0]
+    # df = df[(df['Minute']) >= 40 | (df['Minute'] <= 20)]
     df = df[~df['Station'].str.contains('\D')]
+    df = df.drop_duplicates('Station')
     try:
         df = df[df['Station'] != '00000']
     except TypeError:
@@ -277,4 +278,4 @@ def synop_df(path):
     # Round time to nearest hour
     final_df['time'] = final_df['time'].dt.round('60min')
 
-    return final_df
+    return final_df, df_climat

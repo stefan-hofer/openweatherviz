@@ -147,7 +147,6 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     else:
         ax.set_extent((west, east, south, north))
 
-
     # Get the wind components, converting from m/s to knots as will
     # be appropriate for the station plot.
     u, v = get_wind_components(((df['ff'].values)*units('knots')),
@@ -215,8 +214,11 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
         else:
             # mask all the manned stations
-            wx['ww'].loc[wx['StationType'] <= 3] = np.nan
-            wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
+            wx['ww'].loc[(wx['StationType'] <= 3)] = np.nan
+            # mask all reports smaller than 9
+            # =7 is an empty symbol!
+            wx['ww'].loc[wx['ww'] <= 9] = 7
+            wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
             stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
@@ -237,7 +239,9 @@ if __name__ == '__main__':
     success = False
     while attempts <= 5 and not success:
         try:
-            df_synop = synop_df()
+            url, path = url_last_hour()
+            download_and_save(path, url)
+            df_synop, df_climat = synop_df(path)
             success = True
         except ValueError:
             attempts += 1
@@ -252,7 +256,7 @@ if __name__ == '__main__':
     # if last hour
     url, path = url_last_hour()
     download_and_save(path, url)
-    df_synop = synop_df(path)
+    df_synop, df_climat = synop_df(path)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
