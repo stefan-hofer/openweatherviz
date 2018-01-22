@@ -72,6 +72,7 @@ def synop_df(path):
     # only valid station IDs
     df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
     # df = df[(df['Minute']) >= 40 | (df['Minute'] <= 20)]
+    df['Station'] = df['Station'].astype(str)
     df = df[~df['Station'].str.contains('\D')]
     df = df.drop_duplicates('Station')
     try:
@@ -259,7 +260,7 @@ def synop_df(path):
     for x in range(0, 9):
         s = 'Precip_' + str(hour_list[x]) + 'h'
         final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
-        print(s)
+        # print(s)
     final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
                                                              loc[df_new['Precip_h'] == '/'])
     # Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])

@@ -254,7 +254,6 @@ if __name__ == '__main__':
     # url, path = url_any_hour(2007, 1, 18, 6)
     # download_and_save(path, url)
     # df_synop = synop_df(path)
-
     # if last hour
     # url, path = url_last_hour()
     # download_and_save(path, url)

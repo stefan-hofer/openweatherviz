@@ -26,8 +26,8 @@ def url_synop(lang='eng', header='yes'):
     url = 'http://www.ogimet.com/cgi-bin/getsynop?'
     i = 0
     for key, value in dic.items():
-        print(key)
-        print(value)
+        # print(key)
+        # print(value)
         if i == 0:
             url += key
         else:
@@ -91,8 +91,8 @@ def url_last_hour(state=None, lang='eng', header='yes'):
     url = 'http://www.ogimet.com/cgi-bin/getsynop?'
     i = 0
     for key, value in dic.items():
-        print(key)
-        print(value)
+        # print(key)
+        # print(value)
         if i == 0:
             url += key
         else:
@@ -157,8 +157,8 @@ def url_any_hour(year=None, month=None, day=None, hour=None, state=None, lang='e
     url = 'http://www.ogimet.com/cgi-bin/getsynop?'
     i = 0
     for key, value in dic.items():
-        print(key)
-        print(value)
+        # print(key)
+        # print(value)
         if i == 0:
             url += key
         else:
