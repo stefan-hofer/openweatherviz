@@ -178,7 +178,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     except (ValueError, TypeError) as error:
         pass
 
-    # stationplot.plot_text((2, 0), df['Station'])
+    stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
