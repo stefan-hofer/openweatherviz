@@ -189,7 +189,7 @@ def synop_df(path):
 
     # Extract the station pressure
     list_to_drop = ['XXXXX', '/////', '30///']
-    df_new['X3'].loc[df_new['X3'].str.contains('//', case=False)] = 'XXXXX'
+    df_new['X3'].loc[df_new['X3'].str.contains('\D')] = 'XXXXX'
     df_new['XP'] = df_new['X3'][~df_new['X3'].isin(list_to_drop)]
     final_df['PP'] = (df_new['XP'].loc[df_new['XP'].str[1] == '0'].str[1:]
                       .astype(int) + 10000)/10
@@ -199,8 +199,7 @@ def synop_df(path):
 
     # Extract the reduced sea level pressure
     list_to_drop = ['XXXXX', '/////', '30///', '48///']
-    df_new['X4'].loc[df_new['X4'].str.contains('//', case=False)] = 'XXXXX'
-    df_new['X4'].loc[df_new['X4'].str.contains('\*', case=False)] = 'XXXXX'
+    df_new['X4'].loc[df_new['X4'].str.contains('\D')] = 'XXXXX'
     df_new['XSLP'] = df_new['X4'][~df_new['X4'].isin(list_to_drop)]
     final_df['SLP'] = (df_new['XSLP'].loc[df_new['XSLP'].str[1] == '0'].str[1:]
                        .astype(int) + 10000)/10
@@ -233,6 +232,7 @@ def synop_df(path):
     list_to_drop = ['XX']
     df_new['Cweather'] = df_new['X7'].str[1:3]
     df_new['Cweather'].loc[df_new['Cweather'].str.contains('/', case=False)] = 'XX'
+    df_new['Cweather'].loc[df_new['Cweather'].str.contains('\D')] = 'XX'
     df_new['Cweather'] = df_new['Cweather'].replace(r'^\s*$', 'XX', regex=True)
     final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(list_to_drop)].astype(int)
     final_df['ww'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
@@ -241,6 +241,7 @@ def synop_df(path):
     list_to_drop = ['XX']
     df_new['Pweather'] = df_new['X7'].str[3:5]
     df_new['Pweather'].loc[df_new['Pweather'].str.contains('/', case=False)] = 'XX'
+    df_new['Pweather'].loc[df_new['Pweather'].str.contains('\D')] = 'XX'
     df_new['Pweather'] = df_new['Pweather'].replace(r'^\s*$', 'XX', regex=True)
     final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
     final_df['WW'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
