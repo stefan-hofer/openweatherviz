@@ -1,4 +1,3 @@
-from datetime import datetime
 import numpy as np
 import cartopy.crs as ccrs
 import matplotlib
@@ -8,8 +7,6 @@ import matplotlib.patheffects as path_effects
 import matplotlib.path as mpath
 import pandas as pd
 from metpy.units import units
-from siphon.catalog import TDSCatalog
-from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
 from metpy.plots.wx_symbols import current_weather, sky_cover, current_weather_auto
 from metpy.plots import StationPlot
@@ -127,6 +124,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                           foreground='black'), path_effects.Normal()])
                 except AttributeError:
                     pass
+                j += 1
         # slice out values between x and x+1
         df_cur = df.loc[(df['TT'] < x+1) & (df['TT'] >= x)]
         stationplot = StationPlot(ax, df_cur['longitude'],
