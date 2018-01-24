@@ -8,6 +8,7 @@ import matplotlib.path as mpath
 import pandas as pd
 from metpy.units import units
 from metpy.calc import get_wind_components,  reduce_point_density
+from metpy.gridding.gridding_functions import interpolate, remove_nan_observations
 from metpy.plots.wx_symbols import current_weather, sky_cover, current_weather_auto
 from metpy.plots import StationPlot
 from os.path import expanduser
@@ -52,8 +53,23 @@ def reduce_density(df, dens, projection='EU'):
     return proj, point_locs, df
 
 
+def create_slp_grid(proj, df):
+    lon = df['longitude'].values
+    lat = df['latitude'].values
+    xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
+
+    x_masked, y_masked, pres = remove_nan_observations(xp, yp, df['SLP'].values)
+    slpgridx, slpgridy, slp = interpolate(x_masked,
+                                          y_masked, pres, interp_type='cressman',
+                                          minimum_neighbors=1,
+                                          search_radius=400000, hres=100000)
+
+    return slpgridx, slpgridy, slp
+
+
 def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                         south=42, north=62, fonts=14, cm='gist_ncar', path=None):
+                         south=42, north=62, fonts=14, cm='gist_ncar', path=None,
+                         SLP=False):
     if path is None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
@@ -176,7 +192,24 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     except (ValueError, TypeError) as error:
         pass
 
-    stationplot.plot_text((2, 0), df['Station'])
+    if SLP is True:
+        lon = df['longitude'].loc[df.PressureDefId == 'mean sea level'].values
+        lat = df['latitude'].loc[df.PressureDefId == 'mean sea level'].values
+        xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
+        sea_levelp = df['SLP'].loc[df.PressureDefId == 'mean sea level']
+        x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
+        slpgridx, slpgridy, slp = interpolate(x_masked,
+                                              y_masked, pres, interp_type='cressman',
+                                              minimum_neighbors=1,
+                                              search_radius=400000, hres=100000, rbf_smooth=1000)
+        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(west, east, south, north), levels=list(range(950, 1050, 10)))
+        plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
+
+        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
+                           levels=[x for x in range(950,1050,2) if x not in list(range(950,1050,10))])
+        plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
+
+    # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
     # in x and 0 in y.stationplot.plot_text((2, 0), df['station'])
@@ -205,11 +238,14 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 110000, 'Antarctica')
     plot_map_temperature(proj, point_locs, df_synop_red, area='Antarctica', west=-180,
-                         east=180, south=-90, north=-60.0,  fonts=16)
+                         east=180, south=-90, north=-60.0,  fonts=16, SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
     plot_map_temperature(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
                          south=60, north=90.0,  fonts=19)
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_temperature(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                         south=50.1, north=58.4,  fonts=17)
+                         south=50.1, north=58.4,  fonts=17, SLP=True)
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 150000)
+    plot_map_temperature(proj, point_locs, df_synop_red, fonts=17, SLP=True)
