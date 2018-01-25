@@ -11,6 +11,7 @@ from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
 from metpy.calc import get_wind_components,  reduce_point_density
+from metpy.gridding.gridding_functions import interpolate, remove_nan_observations
 from metpy.plots.wx_symbols import current_weather, current_weather_auto, sky_cover
 from metpy.plots import StationPlot
 from os.path import expanduser
@@ -113,7 +114,7 @@ def reduce_density(df, dens, projection='EU'):
 
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14, path=None):
+                      south=42, north=62, fonts=14, path=None, SLP=False):
     if path is None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
@@ -222,6 +223,22 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             wx['ww'].loc[wx['ww'] <= 9] = 7
             wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
             stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
+    if SLP is True:
+        lon = df['longitude'].loc[df.PressureDefId == 'mean sea level'].values
+        lat = df['latitude'].loc[df.PressureDefId == 'mean sea level'].values
+        xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
+        sea_levelp = df['SLP'].loc[df.PressureDefId == 'mean sea level']
+        x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
+        slpgridx, slpgridy, slp = interpolate(x_masked,
+                                              y_masked, pres, interp_type='cressman',
+                                              minimum_neighbors=1,
+                                              search_radius=400000, hres=100000, rbf_smooth=1000)
+        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(west, east, south, north), levels=list(range(950, 1050, 10)))
+        plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
+
+        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
+                           levels=[x for x in range(950,1050,2) if x not in list(range(950,1050,10))])
+        plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
@@ -265,7 +282,7 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                      south=50.1, north=58.4,  fonts=11)
+                      south=50.1, north=58.4,  fonts=11, SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
