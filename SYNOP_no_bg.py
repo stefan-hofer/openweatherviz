@@ -124,7 +124,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             os.mkdir(path)
     else:
         path = path
-    df = df_t
+    df = df_t.loc[(df_t['longitude'] >= west-4) & (df_t['longitude'] <= east+4)
+                  & (df_t['latitude'] <= north+4) & (df_t['latitude'] >= south-4)]
     plt.rcParams['savefig.dpi'] = 300
     # =========================================================================
     # Create the figure and an axes set to the projection.
@@ -231,13 +232,12 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
         x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
         slpgridx, slpgridy, slp = interpolate(x_masked,
                                               y_masked, pres, interp_type='cressman',
-                                              minimum_neighbors=1,
-                                              search_radius=400000, hres=100000, rbf_smooth=1000)
+                                              search_radius=400000, rbf_func='quintic', minimum_neighbors=1, hres=100000, rbf_smooth=100000)
         Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(west, east, south, north), levels=list(range(950, 1050, 10)))
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
 
         Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
-                           levels=[x for x in range(950,1050,2) if x not in list(range(950,1050,10))])
+                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950,1050,10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
@@ -278,9 +278,9 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                      south=58, north=70.5,  fonts=16)
+                      south=58, north=70.5,  fonts=16, SLP=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 1000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
                       south=50.1, north=58.4,  fonts=11, SLP=True)
 
