@@ -225,10 +225,10 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
             stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
     if SLP is True:
-        lon = df['longitude'].loc[df.PressureDefId == 'mean sea level'].values
-        lat = df['latitude'].loc[df.PressureDefId == 'mean sea level'].values
+        lon = df['longitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        lat = df['latitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
         xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
-        sea_levelp = df['SLP'].loc[df.PressureDefId == 'mean sea level']
+        sea_levelp = df['SLP'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
         x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
         slpgridx, slpgridy, slp = interpolate(x_masked,
                                               y_masked, pres, interp_type='cressman',
@@ -286,7 +286,7 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
-                      south=45.9, north=49.4, fonts=12)
+                      south=45.9, north=49.4, fonts=12, SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
     plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
