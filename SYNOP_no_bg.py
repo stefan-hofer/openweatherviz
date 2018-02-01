@@ -288,6 +288,9 @@ if __name__ == '__main__':
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
                       south=45.9, north=49.4, fonts=12, SLP=True)
 
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 120000)
+    plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)
+
     proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
     plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
                       south=-90, north=-60.0,  fonts=16)
