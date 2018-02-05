@@ -251,6 +251,7 @@ def synop_df(path):
     df_climat['X6_333'].loc[df_climat['X6_333'].str.contains('//')] == 'XXXXX'
     list_to_drop = ['XXX', '///']
     df_new['Precip'] = df_climat['X6_333'].str[1:4]
+    df_new['Precip'].loc[df_new['Precip'].str.contains('\D')] = 'XXX'
     df_new['Precip_h'] = df_climat['X6_333'].str[4]
 
     final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)

@@ -253,29 +253,50 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
 
 
 if __name__ == '__main__':
-
     attempts = 0
     success = False
-    while attempts <= 5 and not success:
-        try:
-            url, path = url_last_hour()
-            download_and_save(path, url)
-            df_synop, df_climat = synop_df(path)
-            success = True
-        except ValueError:
-            attempts += 1
-            print('Not the right amount of columns, trying for the {} time'
-                  .format(attempts))
-            time.sleep(2)
+    text = '''
+    This program can either plot the SYNOP observations for the last hour or for
+    any given date.
+    '''
+    print(text)
+    inp = input('Do you want to plot observations from the last hour? (y/n): ')
+    if inp is 'Y' or inp is 'y':
+        while attempts <= 5 and not success:
+            try:
+                url, path = url_last_hour()
+                download_and_save(path, url)
+                df_synop, df_climat = synop_df(path)
+                success = True
+            except ValueError:
+                attempts += 1
+                print('Not the right amount of columns, trying for the {} time'
+                      .format(attempts))
+                time.sleep(2)
+
+    else:
+        inp = input('For which date do you want to plot the SYNOP observations? (YYYY/MM/DD/HH): ')
+        inp = inp.split('/')
+        # Remove leading zeros, e.g. MM = 05 for May
+        inp = [int(x.lstrip('0')) for x in inp]
+
+        while attempts <= 5 and not success:
+            try:
+                url, path = url_any_hour(year=inp[0], month=inp[1], day=inp[2], hour=inp[3])
+                download_and_save(path, url)
+                df_synop, df_climat = synop_df(path)
+                success = True
+            except ValueError:
+                attempts += 1
+                print('Not the right amount of columns, trying for the {} time'
+                      .format(attempts))
+                time.sleep(2)
+
     # # if specific date
     # url, path = url_any_hour(2007, 1, 18, 6)
     # download_and_save(path, url)
     # df_synop = synop_df(path)
-    # if last hour
-    # url, path = url_last_hour()
-    # download_and_save(path, url)
-    # df_synop, df_climat = synop_df(path)
-if __name__ == '__main__':
+
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                       south=58, north=70.5,  fonts=16, SLP=True)
