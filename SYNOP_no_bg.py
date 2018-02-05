@@ -237,7 +237,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
 
         Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
-                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950,1050,10))])
+                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950, 1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
@@ -300,6 +300,10 @@ if __name__ == '__main__':
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                       south=58, north=70.5,  fonts=16, SLP=True)
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 10000, 'SVA')
+    plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
+                      south=75, north=81.5,  fonts=18, SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 1000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
