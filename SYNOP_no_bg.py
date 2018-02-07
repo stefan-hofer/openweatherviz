@@ -235,12 +235,17 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
         x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
         slpgridx, slpgridy, slp = interpolate(x_masked,
                                               y_masked, pres, interp_type='cressman',
-                                              search_radius=400000, rbf_func='quintic', minimum_neighbors=1, hres=100000, rbf_smooth=100000)
-        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(west, east, south, north), levels=list(range(950, 1050, 10)))
+                                              search_radius=400000, rbf_func='quintic',
+                                              minimum_neighbors=1, hres=100000,
+                                              rbf_smooth=100000)
+        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(
+                                west, east, south, north), levels=list(range(950, 1050, 10)))
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
 
-        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
-                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950, 1050, 10))])
+        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--',
+                           extent=(west, east, south, north),
+                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950,
+                                   1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
