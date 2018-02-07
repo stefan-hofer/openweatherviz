@@ -29,7 +29,7 @@ def plot_upper_air(station='11035', date=False):
         else:
             hour = 12
         date = datetime(now.year, now.month, now.day, hour)
-        datestr = date.strftime('%Iz %Y-%m-%d')
+        datestr = date.strftime('%Hz %Y-%m-%d')
         print('{}'.format(date))
     else:
         year = int(input('Please specify the year: '))
