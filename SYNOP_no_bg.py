@@ -18,6 +18,9 @@ from os.path import expanduser
 import os
 from synop_read_data import synop_df
 from synop_download import url_last_hour, url_any_hour, download_and_save
+#
+# Suppress pd chained_assignment warnings
+pd.options.mode.chained_assignment = None  # default='warn'
 # Request METAR data from TDS
 # os.system(wget -N http://thredds.ucar.edu/thredds/fileServer/nws/metar/
 # ncdecoded/files/Surface_METAR_20171130_0000.nc')
@@ -166,8 +169,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                                 scale='10m',
                                                 facecolor='#d8dcd6',
                                                 alpha=0.5)
-    ax.coastlines(resolution='10m', zorder=1, color='black')
-    ax.add_feature(state_boundaries, zorder=1, edgecolor='black')
+    ax.coastlines(resolution='10m', zorder=0, color='black')
+    ax.add_feature(state_boundaries, zorder=0, edgecolor='black')
     # ax.add_feature(cartopy.feature.OCEAN, zorder=0)
     # Set plot bounds
 
@@ -180,7 +183,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # respectively, of the center point. Each one uses a different color.
     Temp = stationplot.plot_parameter('NW', df['TT'],
                                       color='#fd3c06',
-                                      fontweight='bold', zorder=2000)
+                                      fontweight='bold', zorder=2)
     Td = stationplot.plot_parameter('SW', df['TD'],
                                     color='#01ff07')
     # fontweight = 'bold'
@@ -202,7 +205,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                foreground='black'), path_effects.Normal()])
 
     # Add wind barbs
-    stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
+    stationplot.plot_barb(u, v, zorder=1, linewidth=2)
     # Plot the cloud cover symbols in the center location. This uses the codes
     # made above and uses the `sky_cover` mapper to convert these values to
     # font codes for the weather symbol font.
@@ -215,7 +218,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             # mask all the unmanned stations
             wx['ww'].loc[wx['StationType'] > 3] = np.nan
             wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
-            stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+            stationplot.plot_symbol('W', wx2, current_weather, zorder=4)
         else:
             # mask all the manned stations
             wx['ww'].loc[(wx['StationType'] <= 3)] = np.nan
@@ -223,7 +226,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
             # =7 is an empty symbol!
             wx['ww'].loc[wx['ww'] <= 9] = 7
             wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
-            stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
+            stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=4)
     if SLP is True:
         lon = df['longitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
         lat = df['latitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
@@ -299,7 +302,7 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                      south=58, north=70.5,  fonts=16, SLP=True)
+                      south=58, north=70.5,  fonts=16, SLP=False)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 10000, 'SVA')
     plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
