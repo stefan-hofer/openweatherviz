@@ -112,6 +112,15 @@ def synop_df(path):
                  str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
                                              startswith(str(x))])
 
+    # WIP: START
+    # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
+    # 912 - highest mean wind speed
+    # for x in ['910', '911', '912']:
+    #     for y in range(0,9):
+    #         df_climat[x] = df_climat[df_climat.columns[y]][df_climat[df_climat.columns[y].str.startswith(x)]]
+    # WIP END
+
+    # ----- STANDARD OBSERVATIONS ------------------------------------------
     # Create new df with only the first group of observations (standard observations)
     df_new = df['Rest'].str.split(' ', expand=True)
     df_new.fillna(value='XXXXX', inplace=True)
