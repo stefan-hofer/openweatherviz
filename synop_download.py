@@ -194,11 +194,14 @@ def download_and_save(path, url):
 
     '''
 
-    http = urllib3.PoolManager()
-    with http.request('GET', url, preload_content=False) as r, open(path, 'wb') \
-            as out_file:
-                shutil.copyfileobj(r, out_file)
-    print('Saved file to {}.'.format(path))
+    if os.path.exists(path):
+        print('Using an existing file stored in {}.'.format(path))
+    else:
+        http = urllib3.PoolManager()
+        with http.request('GET', url, preload_content=False) as r, open(path, 'wb') \
+                as out_file:
+                    shutil.copyfileobj(r, out_file)
+        print('Saved file to {}.'.format(path))
 
 
 if __name__ == 'main':

@@ -117,7 +117,7 @@ def reduce_density(df, dens, projection='EU'):
 
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14, path=None, SLP=False):
+                      south=42, north=62, fonts=14, path=None, SLP=False, gust=False):
     if path is None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
@@ -186,6 +186,13 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                       fontweight='bold', zorder=2)
     Td = stationplot.plot_parameter('SW', df['TD'],
                                     color='#01ff07')
+
+    if gust is True:
+        maxff = stationplot.plot_parameter('SE', df['max_gust'],
+                                           color='#cb416b', fontweight='bold',
+                                           zorder=2)
+        maxff.set_path_effects([path_effects.Stroke(linewidth=1.5,
+                               foreground='black'), path_effects.Normal()])
     # fontweight = 'bold'
     # More complex ex. uses custom formatter to control how sea-level pressure
     # values are plotted. This uses the standard trailing 3-digits of
@@ -247,6 +254,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                            levels=[x for x in range(950, 1050, 1) if x not in list(range(950,
                                    1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
+
     # stationplot.plot_text((2, 0), df['Station'])
     # Also plot the actual text of the station id. Instead of cardinal
     # directions, plot further out by specifying a location of 2 increments
@@ -307,19 +315,21 @@ if __name__ == '__main__':
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                      south=58, north=70.5,  fonts=16, SLP=False)
+                      south=58, north=70.5,  fonts=16, SLP=False, gust=True)
+    plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
+                      south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 13000, 'SVA')
     plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
-                      south=75, north=81.5,  fonts=18, SLP=True)
+                      south=75, north=81.5,  fonts=18, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 10000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                      south=50.1, north=58.4,  fonts=11, SLP=True)
+                      south=50.1, north=58.4,  fonts=11, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
-                      south=45.9, north=49.4, fonts=12, SLP=True)
+                      south=45.9, north=49.4, fonts=12, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 120000)
     plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)

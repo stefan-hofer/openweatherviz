@@ -65,7 +65,6 @@ def synop_df(path):
 
     # Load the data into a dataframe
     df = load_main(path)
-    df_report = load_report(path)
 
     # Do some cleaning up of the dataframe
     # only valid station IDs
@@ -114,11 +113,14 @@ def synop_df(path):
     # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
     # 912 - highest mean wind speed
     for x in ['910', '911', '912', '913', '914']:
-        for y in range(0,9):
+        for y in range(0, 9):
             if y is 0:
-                df_climat[x] = df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].str.startswith(x)]
+                df_climat[x] = (df_climat[df_climat.columns[y]].
+                                loc[df_climat[df_climat.columns[y]].str.startswith(x)])
             else:
-                df_climat[x].loc[df_climat[df_climat.columns[y]].str.startswith(x)] = df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].str.startswith(x)]
+                df_climat[x].loc[df_climat[df_climat.columns[y]].str.startswith(x)] = (
+                    df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].
+                                                        str.startswith(x)])
 
     df_climat.fillna(value='XXXXX', inplace=True)
     # WIP END
@@ -265,7 +267,8 @@ def synop_df(path):
     df_new['max_gust'].loc[df_new['max_gust'].str.contains('\D')] = 'XX'
     final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
 
-    (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+    (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= (units('m/s')
+                                                                                    .to('knots'))
     final_df['max_gust'] *= units('knots').to('kph')
 
     # Extract precip data
