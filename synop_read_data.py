@@ -115,9 +115,14 @@ def synop_df(path):
     # WIP: START
     # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
     # 912 - highest mean wind speed
-    # for x in ['910', '911', '912']:
-    #     for y in range(0,9):
-    #         df_climat[x] = df_climat[df_climat.columns[y]][df_climat[df_climat.columns[y].str.startswith(x)]]
+    for x in ['910', '911', '912', '913', '914']:
+        for y in range(0,9):
+            if y is 0:
+                df_climat[x] = df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].str.startswith(x)]
+            else:
+                df_climat[x].loc[df_climat[df_climat.columns[y]].str.startswith(x)] = df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].str.startswith(x)]
+
+    df_climat.fillna(value='XXXXX', inplace=True)
     # WIP END
 
     # ----- STANDARD OBSERVATIONS ------------------------------------------
@@ -130,10 +135,11 @@ def synop_df(path):
 
     max_iter = np.shape(df_new)[1]
 
+    # This looks for gusts >= 100 in main part of Synop
     for x in range(1, 10):
         for y in range(0, max_iter):
             if y == 0:
-                df_new['max_gust'] = df_new[y][df_new[y].str.startswith(str('00'))]
+                df_new['max_gt_100'] = df_new[y][df_new[y].str.startswith(str('00'))]
                 df_new[list1[x-1]] = df_new[y][df_new[y].str.startswith(str(x))]
             else:
                 df_new[list1[x-1]][df_new[y].str.startswith(str(x))] = (df_new[y][df_new[y].str
@@ -142,7 +148,7 @@ def synop_df(path):
     df_new.fillna(value='XXXXX', inplace=True)
     df_new = df_new.replace(r'^\s*$', 'XXXXX', regex=True)
     # Print all the stations with gusts >= 100 knots or m/s
-    df_new['max_gust'][df_new['max_gust'].str.startswith('00')]
+    df_new['max_gt_100'][df_new['max_gt_100'].str.startswith('00')]
 
     # =======================================================================================
     # ======================= EXTRACT ALL THE DATA ==========================================
@@ -254,6 +260,15 @@ def synop_df(path):
     df_new['Pweather'] = df_new['Pweather'].replace(r'^\s*$', 'XX', regex=True)
     final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
     final_df['WW'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
+
+    # Extract mag gust from df_climat
+    list_to_drop = ['XX']
+    df_new['max_gust'] = df_climat['911'].str[3:5]
+    df_new['max_gust'].loc[df_new['max_gust'].str.contains('\D')] = 'XX'
+    final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
+
+    (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+
 
     # Extract precip data
     df_climat.fillna('XXXXX', inplace=True)
