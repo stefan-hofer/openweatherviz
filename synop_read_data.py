@@ -68,7 +68,6 @@ def synop_df(path):
     df_report = load_report(path)
 
     # Do some cleaning up of the dataframe
-
     # only valid station IDs
     df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
     # df = df[(df['Minute']) >= 40 | (df['Minute'] <= 20)]
@@ -98,7 +97,6 @@ def synop_df(path):
     list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
     df_climat = df[' 333 '].str.split(' ', expand=True, n=8)
     shp = np.shape(df_climat)[1]
-    list_xx = ['333'] * shp
     list_cols = [x+'_333' for x in list1]
     df_climat.fillna(value='XXXXX', inplace=True)
 
@@ -268,7 +266,7 @@ def synop_df(path):
     final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
 
     (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
-
+    final_df['max_gust'] *= units('knots').to('kph')
 
     # Extract precip data
     df_climat.fillna('XXXXX', inplace=True)
@@ -304,5 +302,7 @@ def synop_df(path):
     final_df = final_df.merge(df_test, left_on='Station', right_on='Statindex')
     # Round time to nearest hour
     final_df['time'] = final_df['time'].dt.round('60min')
+    # Final drop of duplicates
+    final_df = final_df.drop_duplicates('Station')
 
     return final_df, df_climat

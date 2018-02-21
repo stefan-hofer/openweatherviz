@@ -309,11 +309,11 @@ if __name__ == '__main__':
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                       south=58, north=70.5,  fonts=16, SLP=False)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 10000, 'SVA')
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 13000, 'SVA')
     plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
                       south=75, north=81.5,  fonts=18, SLP=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 1000)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 10000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
                       south=50.1, north=58.4,  fonts=11, SLP=True)
 
