@@ -188,25 +188,29 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                 wx['ww'].loc[wx['ww'] <= 9] = 7
                 wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
                 stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
-        print(u, v)
+        # print(u, v)
     except (ValueError, TypeError) as error:
         pass
 
     if SLP is True:
-        lon = df['longitude'].loc[df.PressureDefId == 'mean sea level'].values
-        lat = df['latitude'].loc[df.PressureDefId == 'mean sea level'].values
+        lon = df['longitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        lat = df['latitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
         xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
-        sea_levelp = df['SLP'].loc[df.PressureDefId == 'mean sea level']
+        sea_levelp = df['SLP'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
         x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
         slpgridx, slpgridy, slp = interpolate(x_masked,
                                               y_masked, pres, interp_type='cressman',
-                                              minimum_neighbors=1,
-                                              search_radius=400000, hres=100000, rbf_smooth=1000)
-        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(west, east, south, north), levels=list(range(950, 1050, 10)))
+                                              search_radius=400000, rbf_func='quintic',
+                                              minimum_neighbors=1, hres=100000,
+                                              rbf_smooth=100000)
+        Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(
+                                west, east, south, north), levels=list(range(950, 1050, 10)))
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
 
-        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--', extent=(west, east, south, north),
-                           levels=[x for x in range(950,1050,2) if x not in list(range(950,1050,10))])
+        Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--',
+                           extent=(west, east, south, north),
+                           levels=[x for x in range(950, 1050, 1) if x not in list(range(950,
+                                   1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
 
     # stationplot.plot_text((2, 0), df['Station'])
