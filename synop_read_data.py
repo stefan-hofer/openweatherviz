@@ -5,7 +5,7 @@ from synop_download import url_last_hour, url_any_hour, download_and_save
 from metpy.units import units
 
 
-def synop_df(path):
+def synop_df(path, timeseries=False):
     # Load lat lon dataset
     fields = ['RegionId', 'RegionName', 'CountryArea', 'CountryCode', 'StationId',
               'IndexNbr', 'IndexSubNbr', 'StationName', 'Latitude', 'Longitude', 'Hp',
@@ -72,7 +72,8 @@ def synop_df(path):
     # df = df[(df['Minute']) >= 40 | (df['Minute'] <= 20)]
     df['Station'] = df['Station'].astype(str)
     df = df[~df['Station'].str.contains('\D')]
-    df = df.drop_duplicates('Station')
+    if timeseries is False:
+        df = df.drop_duplicates('Station')
     try:
         df = df[df['Station'] != '00000']
     except TypeError:
@@ -93,37 +94,39 @@ def synop_df(path):
             print('Error when handling {} group!'.format(x))
 
     # Sort all the values from the '333' group in corresponding columns
-    list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
-    df_climat = df[' 333 '].str.split(' ', expand=True, n=8)
-    shp = np.shape(df_climat)[1]
-    list_cols = [x+'_333' for x in list1]
-    df_climat.fillna(value='XXXXX', inplace=True)
+    try:
+        list1 = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9']
+        df_climat = df[' 333 '].str.split(' ', expand=True, n=8)
+        shp = np.shape(df_climat)[1]
+        list_cols = [x+'_333' for x in list1]
+        df_climat.fillna(value='XXXXX', inplace=True)
 
-    for x in range(1, 10):
-        for y in range(0, shp):
-            if y == 0:
-                df_climat[list_cols[x-1]] = (df_climat[y]
-                                             [df_climat[y].str.startswith(str(x))])
-            else:
-                (df_climat[list_cols[x-1]][df_climat[y].
-                 str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
-                                             startswith(str(x))])
+        for x in range(1, 10):
+            for y in range(0, shp):
+                if y == 0:
+                    df_climat[list_cols[x-1]] = (df_climat[y]
+                                                 [df_climat[y].str.startswith(str(x))])
+                else:
+                    (df_climat[list_cols[x-1]][df_climat[y].
+                     str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
+                                                 startswith(str(x))])
+        df_climat.fillna(value='XXXXX', inplace=True)
+        # WIP: START
+        # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
+        # 912 - highest mean wind speed
+        for x in ['910', '911', '912', '913', '914']:
+            for y in range(0, 9):
+                if y is 0:
+                    df_climat[x] = (df_climat[df_climat.columns[y]].
+                                    loc[df_climat[df_climat.columns[y]].str.startswith(x)])
+                else:
+                    df_climat[x].loc[df_climat[df_climat.columns[y]].str.startswith(x)] = (
+                        df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].
+                                                            str.startswith(x)])
+        df_climat.fillna(value='XXXXX', inplace=True)
 
-    # WIP: START
-    # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
-    # 912 - highest mean wind speed
-    for x in ['910', '911', '912', '913', '914']:
-        for y in range(0, 9):
-            if y is 0:
-                df_climat[x] = (df_climat[df_climat.columns[y]].
-                                loc[df_climat[df_climat.columns[y]].str.startswith(x)])
-            else:
-                df_climat[x].loc[df_climat[df_climat.columns[y]].str.startswith(x)] = (
-                    df_climat[df_climat.columns[y]].loc[df_climat[df_climat.columns[y]].
-                                                        str.startswith(x)])
-
-    df_climat.fillna(value='XXXXX', inplace=True)
-    # WIP END
+    except KeyError:
+        print('No climate data available')
 
     # ----- STANDARD OBSERVATIONS ------------------------------------------
     # Create new df with only the first group of observations (standard observations)
@@ -261,35 +264,39 @@ def synop_df(path):
     final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
     final_df['WW'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
 
-    # Extract mag gust from df_climat
-    list_to_drop = ['XX']
-    df_new['max_gust'] = df_climat['911'].str[3:5]
-    df_new['max_gust'].loc[df_new['max_gust'].str.contains('\D')] = 'XX'
-    final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
+    # Only if df_climat exists
+    if 'df_climat' in locals():
+        # Extract mag gust from df_climat
+        list_to_drop = ['XX']
+        df_new['max_gust'] = df_climat['911'].str[3:5]
+        df_new['max_gust'].loc[df_new['max_gust'].str.contains('\D')] = 'XX'
+        final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
 
-    (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= (units('m/s')
-                                                                                    .to('knots'))
-    final_df['max_gust'] *= units('knots').to('kph')
+        (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= (units('m/s')
+                                                                                        .to('knots'))
+        final_df['max_gust'] *= units('knots').to('kph')
 
-    # Extract precip data
-    df_climat.fillna('XXXXX', inplace=True)
-    df_climat['X6_333'].loc[df_climat['X6_333'].str.contains('//')] == 'XXXXX'
-    list_to_drop = ['XXX', '///']
-    df_new['Precip'] = df_climat['X6_333'].str[1:4]
-    df_new['Precip'].loc[df_new['Precip'].str.contains('\D')] = 'XXX'
-    df_new['Precip_h'] = df_climat['X6_333'].str[4]
+        # Extract precip data
+        df_climat.fillna('XXXXX', inplace=True)
+        df_climat['X6_333'].loc[df_climat['X6_333'].str.contains('//')] == 'XXXXX'
+        list_to_drop = ['XXX', '///']
+        df_new['Precip'] = df_climat['X6_333'].str[1:4]
+        df_new['Precip'].loc[df_new['Precip'].str.contains('\D')] = 'XXX'
+        df_new['Precip_h'] = df_climat['X6_333'].str[4]
 
-    final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)
-    final_df['Precip'].loc[final_df['Precip'] >= 991] = (final_df['Precip'] - 990) / 10
-    final_df['Precip'].loc[final_df['Precip'] == 990] = 0.01
+        final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)
+        final_df['Precip'].loc[final_df['Precip'] >= 991] = (final_df['Precip'] - 990) / 10
+        final_df['Precip'].loc[final_df['Precip'] == 990] = 0.01
 
-    hour_list = [6, 12, 18, 24, 1, 2, 3, 9, 15]
-    for x in range(0, 9):
-        s = 'Precip_' + str(hour_list[x]) + 'h'
-        final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
-        # print(s)
-    final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
-                                                             loc[df_new['Precip_h'] == '/'])
+        hour_list = [6, 12, 18, 24, 1, 2, 3, 9, 15]
+        for x in range(0, 9):
+            s = 'Precip_' + str(hour_list[x]) + 'h'
+            final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
+            # print(s)
+        final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
+                                                                 loc[df_new['Precip_h'] == '/'])
+    else:
+        df_climat = pd.DataFrame()
     # Possible plot option: plt.plot(final_df['Precip_1h'][final_df['Precip_1h'].notnull()])
     # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h
     # Precip_15h
@@ -301,11 +308,17 @@ def synop_df(path):
     final_df['latitude'].loc[final_df['N_or_S'] == 'S'] = (final_df['latitude'].
                                                            loc[final_df['N_or_S'] == 'S']
                                                            * (-1))
+    # Add time to the final dataframe
     df_test = df[['Statindex', 'time']]
-    final_df = final_df.merge(df_test, left_on='Station', right_on='Statindex')
+    if timeseries is False:
+        final_df = final_df.merge(df_test, left_on='Station', right_on='Statindex')
+    else:
+        final_df['time'] = df_test['time']
     # Round time to nearest hour
     final_df['time'] = final_df['time'].dt.round('60min')
-    # Final drop of duplicates
-    final_df = final_df.drop_duplicates('Station')
+
+    if timeseries is False:
+        # Final drop of duplicates
+        final_df = final_df.drop_duplicates('Station')
 
     return final_df, df_climat

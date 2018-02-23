@@ -170,6 +170,80 @@ def url_any_hour(year=None, month=None, day=None, hour=None, state=None, lang='e
     return url, path
 
 
+def url_timeseries(year=None, month=None, day=None, hour=None,
+                   year_end=None, month_end=None, day_end=None, hour_end=None,
+                   station=None, state=None, lang='eng',
+                   header='yes'):
+    '''
+    Function to download a time series of SYNOP observations from a station or a
+    block of station (i.e. station = 11, will download all stations starting with 11)
+
+    Arguments:
+    ----------
+    year=None, month=None, day=None, hour=None,
+    year_end=None, month_end=None, day_end=None, hour_end=None,
+    station=None, state=None, lang='eng',
+    header='yes'
+
+    Returns:
+    --------
+    url (to download file)
+    path (to save the file)
+
+    Examples:
+    ---------
+    from synop_download import url_any_hour
+    url, path = url_timeseries(2018,2,22,0,2018,2,23,17,'04301')
+
+    '''
+    station = str(station)
+    # Create the dates and strings
+    now = datetime(year_end, month_end, day_end, hour_end, 00)
+    end_str = now.strftime('%Y%m%d%H%M')
+
+    save_str_end = datetime(year_end, month_end, day_end, hour_end, 00)
+    save_str_end = save_str_end.strftime('%Y%m%d%H%M')
+
+    start = datetime(year, month, day, hour, 00)
+    start_str = start.strftime('%Y%m%d%H%M')
+
+    save_str = datetime(year, month, day, hour, 00)
+    save_str = save_str.strftime('%Y%m%d%H%M')
+    # set up the paths and test for existence
+    path = expanduser('~') + '/Documents/Synop_data'
+    try:
+        os.listdir(path)
+    except FileNotFoundError:
+        os.mkdir(path)
+        print('Created the path {}'.format(path))
+
+    # Where to save the file
+    path = path + '/synop_' + save_str + '-' + save_str_end + '.csv'
+
+    list_names = ['block', 'begin', 'end', 'lang', 'header', 'state']
+    lis = [x for x in [station, start_str, end_str, lang, header, state]]
+    dic = {}
+    for name, val in zip(list_names, lis):
+        if (val == 'N' or val == 'n' or val is None):
+            pass
+        else:
+            dic[name] = val
+    url = 'http://www.ogimet.com/cgi-bin/getsynop?'
+    i = 0
+    for key, value in dic.items():
+        # print(key)
+        # print(value)
+        if i == 0:
+            url += key
+        else:
+            url += '&'+key
+        url += '='+value
+        i += 1
+        print(url)
+
+    return url, path
+
+
 def download_and_save(path, url):
     '''
     Function to download and save the file from the url created by either
