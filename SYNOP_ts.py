@@ -19,6 +19,9 @@ import os
 from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
-url, path = url_timeseries(2017, 2, 22, 0, 2018, 2, 23, 18, '04301')
-download_and_save(path, url)
+station = '04301'
+for yr in [2014, 2012, 2010, 2008, 2006]:
+    url, path = url_timeseries(yr-1, 1, 1, 0, yr, 12, 31, 23, station)
+    download_and_save(path, url)
+    time.sleep(360)  # seconds
 df_synop, df_climat = synop_df(path, timeseries=True)

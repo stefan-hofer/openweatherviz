@@ -210,15 +210,15 @@ def url_timeseries(year=None, month=None, day=None, hour=None,
     save_str = datetime(year, month, day, hour, 00)
     save_str = save_str.strftime('%Y%m%d%H%M')
     # set up the paths and test for existence
-    path = expanduser('~') + '/Documents/Synop_data'
+    path = expanduser('~') + '/Documents/Synop_data/StationData/' + station + '/'
     try:
         os.listdir(path)
     except FileNotFoundError:
-        os.mkdir(path)
+        os.makedirs(path)
         print('Created the path {}'.format(path))
 
     # Where to save the file
-    path = path + '/synop_' + save_str + '-' + save_str_end + '.csv'
+    path = path + '/synop_' + station + '_' + save_str + '-' + save_str_end + '.csv'
 
     list_names = ['block', 'begin', 'end', 'lang', 'header', 'state']
     lis = [x for x in [station, start_str, end_str, lang, header, state]]
