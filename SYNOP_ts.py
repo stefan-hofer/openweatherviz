@@ -20,8 +20,14 @@ from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
 station = '04301'
-for yr in [2014, 2012, 2010, 2008, 2006]:
+for yr in [2004, 2002, 2000, 1998, 1996, 1994, 1992, 1990]:
     url, path = url_timeseries(yr-1, 1, 1, 0, yr, 12, 31, 23, station)
     download_and_save(path, url)
     time.sleep(360)  # seconds
+
+# Opening multiple files at once and merge them into one df
+path = expanduser('~')
+path = path + '/Documents/Synop_data/StationData/04301/'
+path = os.path.join(path, '*.csv')
+
 df_synop, df_climat = synop_df(path, timeseries=True)

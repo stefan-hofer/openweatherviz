@@ -3,6 +3,7 @@ import urllib3
 import os
 from os.path import expanduser
 import shutil
+import glob
 
 
 def url_synop(lang='eng', header='yes'):
@@ -260,8 +261,6 @@ def download_and_save(path, url):
 
     Examples:
     ---------
-    Examples:
-    ---------
     from synop_download import url_last_hour
     url, path = url_last_hour()
     download_and_save(path, url)
@@ -276,6 +275,24 @@ def download_and_save(path, url):
                 as out_file:
                     shutil.copyfileobj(r, out_file)
         print('Saved file to {}.'.format(path))
+
+
+# WIP STARTS HERE
+def decode_multiple(path):
+    '''Decodes and saves multiple SYNOP files located in path.
+
+    Arguments:
+    ----------
+    path (contains all the *.csv files)
+
+    Examples:
+    ---------
+
+    '''
+    list_files = glob.glob(os.path.join(path, '*.csv'))
+    for f in list_files:
+        # WIP ENDS HERE
+        pass
 
 
 if __name__ == 'main':
