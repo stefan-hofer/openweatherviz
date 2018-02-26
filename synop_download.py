@@ -277,24 +277,6 @@ def download_and_save(path, url):
         print('Saved file to {}.'.format(path))
 
 
-# WIP STARTS HERE
-def decode_multiple(path):
-    '''Decodes and saves multiple SYNOP files located in path.
-
-    Arguments:
-    ----------
-    path (contains all the *.csv files)
-
-    Examples:
-    ---------
-
-    '''
-    list_files = glob.glob(os.path.join(path, '*.csv'))
-    for f in list_files:
-        # WIP ENDS HERE
-        pass
-
-
 if __name__ == 'main':
     url, path = url_last_hour(state=None)
     download_and_save(path, url)

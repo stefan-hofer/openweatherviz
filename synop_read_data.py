@@ -190,6 +190,8 @@ def synop_df(path, timeseries=False):
     # Extract Temperature and assign + or - by dividing through 10 or -10
     list_to_drop = ['XXXXX', '/////', '10///', '10']
     df_new['X1'].loc[df_new['X1'].str.contains('\D')] = 'XXXXX'
+    # Entries not long enough will be replaced
+    df_new['X1'].loc[df_new['X1'].str.len() < 5] = 'XXXXX'
     df_new['X1'] = df_new['X1'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XT'] = df_new['X1'][~df_new['X1'].isin(list_to_drop)]
     final_df['TT'] = df_new['XT'].loc[df_new['XT'].str[1] == '0'].str[2:].astype(int)/10
@@ -198,6 +200,8 @@ def synop_df(path, timeseries=False):
     # Extract Td and assign + or - sign
     list_to_drop = ['XXXXX', '/////', '20///', '20']
     df_new['X2'].loc[df_new['X2'].str.contains('\D')] = 'XXXXX'
+    # Entries not long enough will be replaced
+    df_new['X2'].loc[df_new['X2'].str.len() < 5] = 'XXXXX'
     df_new['X2'] = df_new['X2'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XTD'] = df_new['X2'][~df_new['X2'].isin(list_to_drop)]
     final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1] == '0'].str[2:].astype(int)/10
