@@ -1,17 +1,19 @@
-from datetime import datetime
 import time
 import pandas as pd
 import glob
-import
 from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
-station = '04301'
-for yr in [2004, 2002, 2000, 1998, 1996, 1994, 1992, 1990]:
-    url, path = url_timeseries(yr-1, 1, 1, 0, yr, 12, 31, 23, station)
-    download_and_save(path, url)
-    time.sleep(360)  # seconds
+# station = '04301'  # Kap Morris Jesup
+# for yr in [2004, 2002, 2000, 1998, 1996, 1994, 1992, 1990]:
+#     url, path = url_timeseries(yr-1, 1, 1, 0, yr, 12, 31, 23, station)
+#     download_and_save(path, url)
+#     time.sleep(360)  # seconds
 
+station = '01008'
+url, path = url_timeseries(2018,2,25,0,2018,2,27,18,station)
+download_and_save(path, url)
+df_synop, df_climat = synop_df(path, timeseries=True)
 
 # WIP STARTS HERE
 def decode_multiple(path):
