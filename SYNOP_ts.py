@@ -1,6 +1,8 @@
 import time
+import matplotlib.pyplot as plt
 import pandas as pd
 import glob
+import os
 from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
@@ -11,9 +13,10 @@ from synop_download import download_and_save, url_timeseries
 #     time.sleep(360)  # seconds
 
 station = '01008'
-url, path = url_timeseries(2018,2,25,0,2018,2,27,18,station)
+url, path = url_timeseries(2018,2,27,11,2018,2,28,12,station)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
+
 
 # WIP STARTS HERE
 def decode_multiple(path):
@@ -52,3 +55,14 @@ def open_multiple(path):
     df['time'] = pd.to_datetime(df.time)
     df = df.set_index('time')
     return df
+
+
+def plot_twiny(df,p1,p2,p3):
+    f, ax = plt.subplots(2, 1, sharex=True)
+    ax[0].plot(df.index, df[p1])
+    ax[0].plot(df.index, df[p2])
+
+
+    ax[1].plot(df.index, df[p3])
+
+    return f, ax

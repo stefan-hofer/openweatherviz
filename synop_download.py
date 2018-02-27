@@ -219,7 +219,7 @@ def url_timeseries(year=None, month=None, day=None, hour=None,
         print('Created the path {}'.format(path))
 
     # Where to save the file
-    path = path + '/synop_' + station + '_' + save_str + '-' + save_str_end + '.csv'
+    path = path + 'synop_' + station + '_' + save_str + '-' + save_str_end + '.csv'
 
     list_names = ['block', 'begin', 'end', 'lang', 'header', 'state']
     lis = [x for x in [station, start_str, end_str, lang, header, state]]
