@@ -33,6 +33,8 @@ plot_upper_air('01004', date=True)
 >Please specify the hour: 0
 >You entered 2018-02-26 00:00:00
 ```
+The output you get will look something like this:
+![Sounding 26 March 2018 - Ny Alesund](https://github.com/shofer16450/openweatherviz/blob/master/Documentation/Sounding_01004_2018022600z.png)
 
 
 ## LINKS
