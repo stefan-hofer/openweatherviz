@@ -4,14 +4,18 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
+import metpy.calc as mpcalc
 from metpy.calc import dewpoint_rh
 from metpy.cbook import get_test_data
 from metpy.plots import add_metpy_logo
 from metpy.units import units
 
+from synop_read_data import synop_df
+from synop_download import download_and_save, url_timeseries
 
-def calc_mslp(t, p, h):
-    return p * (1 - (0.0065 * h) / (t + 0.0065 * h + 273.15)) ** (-5.257)
+# 
+# def calc_mslp(t, p, h):
+#     return p * (1 - (0.0065 * h) / (t + 0.0065 * h + 273.15)) ** (-5.257)
 
 
 # Make meteogram plot
@@ -58,14 +62,14 @@ class Meteogram(object):
         plt.fill_between(self.dates, ws, 0)
         self.ax1.set_xlim(self.start, self.end)
         if not plot_range:
-            plot_range = [0, 20, 1]
+            plot_range = [0, 60, 1]
         plt.ylabel('Wind Speed (knots)', multialignment='center')
         self.ax1.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
         ln2 = self.ax1.plot(self.dates,
                             wsmax,
                             '.r',
-                            label='3-sec Wind Speed Max')
+                            label='1h Wind Speed Max')
         plt.setp(self.ax1.get_xticklabels(), visible=True)
         ax7 = self.ax1.twinx()
         ln3 = ax7.plot(self.dates,
@@ -85,14 +89,14 @@ class Meteogram(object):
     def plot_thermo(self, t, td, plot_range=None):
         """
         Required input:
-            T: Temperature (deg F)
-            TD: Dewpoint (deg F)
+            T: Temperature (deg C)
+            TD: Dewpoint (deg C)
         Optional Input:
             plot_range: Data range for making figure (list of (min,max,step))
         """
         # PLOT TEMPERATURE AND DEWPOINT
         if not plot_range:
-            plot_range = [10, 90, 2]
+            plot_range = [-10, 30, 2]
         self.ax2 = fig.add_subplot(4, 1, 2, sharex=self.ax1)
         ln4 = self.ax2.plot(self.dates,
                             t,
@@ -103,7 +107,7 @@ class Meteogram(object):
                          td,
                          color='r')
         plt.setp(self.ax2.get_xticklabels(), visible=True)
-        plt.ylabel('Temperature\n(F)', multialignment='center')
+        plt.ylabel('Temperature\n(C)', multialignment='center')
         plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
         self.ax2.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         ln5 = self.ax2.plot(self.dates,
@@ -158,7 +162,7 @@ class Meteogram(object):
         """
         # PLOT PRESSURE
         if not plot_range:
-            plot_range = [970, 1030, 2]
+            plot_range = [980, 1040, 2]
         self.ax4 = fig.add_subplot(4, 1, 4, sharex=self.ax1)
         self.ax4.plot(self.dates,
                       p,
@@ -178,50 +182,40 @@ class Meteogram(object):
         # plot_precipitation
 
 
-# set the starttime and endtime for plotting, 24 hour range
-endtime = dt.datetime(2016, 3, 31, 22, 0, 0, 0)
-starttime = endtime - dt.timedelta(hours=24)
-
-# Height of the station to calculate MSLP
-hgt_example = 292.
-
-
-# Parse dates from .csv file, knowing their format as a string and convert to datetime
-def parse_date(date):
-    return dt.datetime.strptime(date.decode('ascii'), '%Y-%m-%d %H:%M:%S')
-
-
-testdata = np.genfromtxt(get_test_data('timeseries.csv', False), names=True, dtype=None,
-                         usecols=list(range(1, 8)),
-                         converters={'DATE': parse_date}, delimiter=',')
-
+# Download the station data
+station = '01008'
+url, path = url_timeseries(2018,2,25,00,2018,3,2,9,station)
+download_and_save(path, url)
+df_synop, df_climat = synop_df(path, timeseries=True)
 # Temporary variables for ease
-temp = testdata['T']
-pres = testdata['P']
-rh = testdata['RH']
-ws = testdata['WS']
-wsmax = testdata['WSMAX']
-wd = testdata['WD']
-date = testdata['DATE']
+temp = df_synop['TT'].values * units('degC')
+pres = df_synop['SLP'].values
+dewpoint = df_synop['TD'].values * units('degC')
+rh = mpcalc.relative_humidity_from_dewpoint(temp, dewpoint) * 100
+ws = df_synop['ff'].values
+wsmax = df_synop['max_gust'].values
+wd = df_synop['dd'].values
+date = pd.to_datetime(df_synop['time'].values).tolist()
+
+
 
 # ID For Plotting on Meteogram
-probe_id = '0102A'
+probe_id = df_synop.Station[0]
 
-data = {'wind_speed': (np.array(ws) * units('m/s')).to(units('knots')),
-        'wind_speed_max': (np.array(wsmax) * units('m/s')).to(units('knots')),
+data = {'wind_speed': (np.array(ws) * units('knots')),
+        'wind_speed_max': (np.array(wsmax) * units('km/h')).to(units('knots')),
         'wind_direction': np.array(wd) * units('degrees'),
-        'dewpoint': dewpoint_rh((np.array(temp) * units('degC')).to(units('K')),
-                                np.array(rh) / 100.).to(units('degF')),
-        'air_temperature': (np.array(temp) * units('degC')).to(units('degF')),
-        'mean_slp': calc_mslp(np.array(temp), np.array(pres), hgt_example) * units('hPa'),
+        'dewpoint': np.array(dewpoint),
+        'air_temperature': (np.array(temp) * units('degC')),
+        'mean_slp': pres * units('hPa'),
         'relative_humidity': np.array(rh), 'times': np.array(date)}
 
 fig = plt.figure(figsize=(20, 16))
 add_metpy_logo(fig, 250, 180)
 meteogram = Meteogram(fig, data['times'], probe_id)
 meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'])
-meteogram.plot_thermo(data['air_temperature'], data['dewpoint'])
+meteogram.plot_thermo(data['air_temperature'], data['dewpoint'], plot_range=[min(df_synop['TD'])-3, max(df_synop['TT'])+3,1])
 meteogram.plot_rh(data['relative_humidity'])
-meteogram.plot_pressure(data['mean_slp'])
+meteogram.plot_pressure(data['mean_slp'], plot_range=[min(df_synop['SLP'])-5, max(df_synop['SLP'])+5,1])
 fig.subplots_adjust(hspace=0.5)
 plt.show()
