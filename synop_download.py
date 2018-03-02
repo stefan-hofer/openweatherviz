@@ -1,9 +1,12 @@
 from datetime import datetime
+import glob
 import urllib3
 import os
 from os.path import expanduser
+import pandas as pd
 import shutil
-import glob
+from synop_read_data import synop_df
+
 
 
 def url_synop(lang='eng', header='yes'):
@@ -275,6 +278,43 @@ def download_and_save(path, url):
                 as out_file:
                     shutil.copyfileobj(r, out_file)
         print('Saved file to {}.'.format(path))
+
+def decode_multiple(path):
+    '''Decodes and saves multiple SYNOP files located in path.
+
+    Arguments:
+    ----------
+    path (contains all the *.csv files)
+
+    Examples:
+    ---------
+    path = '/home/sh16450/Documents/Synop_data/StationData/04301/'
+    decode_multiple(path)
+
+    '''
+    list_files = sorted(glob.glob(os.path.join(path, '*.csv')))
+    print(list_files)
+    for f in list_files:
+        # WIP ENDS HERE
+        print('Working on {}!'.format(f))
+        df_synop, df_climat = synop_df(f, timeseries=True)
+        # Split the string before file extension to add 'decoded'
+        split_string = f.split('.')
+        path_save = split_string[0] + '_decoded.' + split_string[1]
+        df_synop.to_csv(path_save)
+
+
+def open_multiple(path):
+    '''Returns concatenated pandas Dataframe and Xarray Dataset
+    path = '/home/sh16450/Documents/Synop_data/StationData/04301/'
+    df = open_multiple(path)
+    '''
+    all_files = sorted(glob.glob(os.path.join(path, "*decoded.csv")))
+    df_from_each_file = (pd.read_csv(f) for f in all_files)
+    df = pd.concat(df_from_each_file, ignore_index=True)
+    df['time'] = pd.to_datetime(df.time)
+    df = df.set_index('time')
+    return df
 
 
 if __name__ == 'main':
