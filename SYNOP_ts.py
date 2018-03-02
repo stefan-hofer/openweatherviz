@@ -6,6 +6,8 @@ import os
 from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
+
+
 # station = '04301'  # Kap Morris Jesup
 # for yr in [2004, 2002, 2000, 1998, 1996, 1994, 1992, 1990]:
 #     url, path = url_timeseries(yr-1, 1, 1, 0, yr, 12, 31, 23, station)
@@ -13,7 +15,7 @@ from synop_download import download_and_save, url_timeseries
 #     time.sleep(360)  # seconds
 
 station = '01008'
-url, path = url_timeseries(2018,2,27,11,2018,2,28,12,station)
+url, path = url_timeseries(2018,2,25,00,2018,3,1,16,station)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
 

@@ -10,7 +10,7 @@ def synop_df(path, timeseries=False):
     fields = ['RegionId', 'RegionName', 'CountryArea', 'CountryCode', 'StationId',
               'IndexNbr', 'IndexSubNbr', 'StationName', 'Latitude', 'Longitude', 'Hp',
               'HpFlag', 'Hha', 'HhaFlag', 'PressureDefId']
-    df_latlon = pd.read_csv('/home/sh16450/Documents/Synop_data/latlon/latest.csv',
+    df_latlon = pd.read_csv('./Input/station_latlon.csv',
                             usecols=fields)
     df_latlon[['Lat_deg', 'Lat_mins', 'Lat_sec']] = (df_latlon['Latitude'].
                                                      str.split(' ', expand=True))
