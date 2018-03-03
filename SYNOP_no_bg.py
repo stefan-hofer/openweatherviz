@@ -313,15 +313,15 @@ if __name__ == '__main__':
     # download_and_save(path, url)
     # df_synop = synop_df(path)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
-    plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-                      south=58, north=70.5,  fonts=16, SLP=False, gust=True)
-    plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
-                      south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
-
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000, 'SVA')
-    plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
-                      south=75, north=81.5,  fonts=16, SLP=True, gust=True)
+    # proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
+    # plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
+    #                   south=58, north=70.5,  fonts=16, SLP=False, gust=True)
+    # plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
+    #                   south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
+    #
+    # proj, point_locs, df_synop_red = reduce_density(df_synop, 30000, 'SVA')
+    # plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
+    #                   south=75, north=81.5,  fonts=16, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 35000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
@@ -334,10 +334,10 @@ if __name__ == '__main__':
     proj, point_locs, df_synop_red = reduce_density(df_synop, 120000)
     plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
-    plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
-                      south=-90, north=-60.0,  fonts=16)
-
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
-    plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
-                      south=60, north=90.0,  fonts=14)
+    # proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
+    # plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
+    #                   south=-90, north=-60.0,  fonts=16)
+    #
+    # proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
+    # plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
+    #                   south=60, north=90.0,  fonts=14)

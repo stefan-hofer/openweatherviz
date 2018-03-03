@@ -10,10 +10,12 @@ from metpy.cbook import get_test_data
 from metpy.plots import add_metpy_logo
 from metpy.units import units
 
+import pandas as pd
+
 from synop_read_data import synop_df
 from synop_download import download_and_save, url_timeseries
 
-# 
+#
 # def calc_mslp(t, p, h):
 #     return p * (1 - (0.0065 * h) / (t + 0.0065 * h + 273.15)) ** (-5.257)
 
@@ -184,7 +186,8 @@ class Meteogram(object):
 
 # Download the station data
 station = '01008'
-url, path = url_timeseries(2018,2,25,00,2018,3,2,9,station)
+url, path = url_timeseries(2008,7,25,00,2008,8,1,12,station)
+# yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
 # Temporary variables for ease
@@ -203,7 +206,7 @@ date = pd.to_datetime(df_synop['time'].values).tolist()
 probe_id = df_synop.Station[0]
 
 data = {'wind_speed': (np.array(ws) * units('knots')),
-        'wind_speed_max': (np.array(wsmax) * units('km/h')).to(units('knots')),
+        'wind_speed_max': (np.array(wsmax) * units('kph')).to(units('knots')),
         'wind_direction': np.array(wd) * units('degrees'),
         'dewpoint': np.array(dewpoint),
         'air_temperature': (np.array(temp) * units('degC')),
