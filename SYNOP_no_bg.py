@@ -116,8 +116,8 @@ def reduce_density(df, dens, projection='EU'):
     return proj, point_locs, df
 
 
-def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14, path=None, SLP=False, gust=False):
+def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
+                      south=35, north=62, fonts=14, path=None, SLP=False, gust=False):
     if path is None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
@@ -328,7 +328,7 @@ if __name__ == '__main__':
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
                       south=45.9, north=49.4, fonts=12, SLP=True, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 120000)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 160000)
     plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
