@@ -124,6 +124,8 @@ def plot_upper_air(station='11035', date=False):
     # Show the plot
     plt.show()
 
+    return cape
+
 
 if __name__ == '__main__':
     plot_upper_air()

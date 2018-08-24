@@ -116,8 +116,8 @@ def reduce_density(df, dens, projection='EU'):
     return proj, point_locs, df
 
 
-def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
-                      south=42, north=62, fonts=14, path=None, SLP=False, gust=False):
+def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
+                      south=35, north=62, fonts=14, path=None, SLP=False, gust=False):
     if path is None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
@@ -164,13 +164,16 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # look of the text rendering.
 
     # Set up a cartopy feature for state borders.
-    state_boundaries = feat.NaturalEarthFeature(category='cultural',
-                                                name='admin_0_countries',
-                                                scale='10m',
-                                                facecolor='#d8dcd6',
-                                                alpha=0.5)
-    ax.coastlines(resolution='10m', zorder=0, color='black')
-    ax.add_feature(state_boundaries, zorder=0, edgecolor='black')
+    # state_boundaries = feat.NaturalEarthFeature(category='cultural',
+    #                                             name='admin_0_countries',
+    #                                             scale='10m',
+    #                                             facecolor='#d8dcd6',
+    #                                             alpha=0.5)
+    # ax.coastlines(resolution='10m', zorder=0, color='black')
+    # ax.add_feature(feat.LAND)
+    ax.add_feature(feat.COASTLINE.with_scale('10m'), zorder=2, edgecolor='black')
+    ax.add_feature(feat.OCEAN.with_scale('50m'), zorder=0)
+    ax.add_feature(feat.STATES.with_scale('10m'), zorder=1, facecolor='white', edgecolor='#5e819d')
     # ax.add_feature(cartopy.feature.OCEAN, zorder=0)
     # Set plot bounds
 
@@ -183,14 +186,14 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
     # respectively, of the center point. Each one uses a different color.
     Temp = stationplot.plot_parameter('NW', df['TT'],
                                       color='#fd3c06',
-                                      fontweight='bold', zorder=2)
+                                      fontweight='bold', zorder=3)
     Td = stationplot.plot_parameter('SW', df['TD'],
                                     color='#01ff07')
 
     if gust is True:
         maxff = stationplot.plot_parameter('SE', df['max_gust'],
                                            color='#cb416b', fontweight='bold',
-                                           zorder=2)
+                                           zorder=3)
         maxff.set_path_effects([path_effects.Stroke(linewidth=1.5,
                                foreground='black'), path_effects.Normal()])
     # fontweight = 'bold'
@@ -212,7 +215,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                foreground='black'), path_effects.Normal()])
 
     # Add wind barbs
-    stationplot.plot_barb(u, v, zorder=1, linewidth=2)
+    stationplot.plot_barb(u, v, zorder=3, linewidth=2)
     # Plot the cloud cover symbols in the center location. This uses the codes
     # made above and uses the `sky_cover` mapper to convert these values to
     # font codes for the weather symbol font.
@@ -313,15 +316,9 @@ if __name__ == '__main__':
     # download_and_save(path, url)
     # df_synop = synop_df(path)
 
-    # proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
-    # plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
-    #                   south=58, north=70.5,  fonts=16, SLP=False, gust=True)
-    # plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
-    #                   south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
-    #
-    # proj, point_locs, df_synop_red = reduce_density(df_synop, 30000, 'SVA')
-    # plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
-    #                   south=75, north=81.5,  fonts=16, SLP=True, gust=True)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000, 'SVA')
+    plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
+                      south=75, north=81.5,  fonts=16, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 35000)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
@@ -331,13 +328,19 @@ if __name__ == '__main__':
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
                       south=45.9, north=49.4, fonts=12, SLP=True, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 120000)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 160000)
     plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)
 
-    # proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
-    # plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
-    #                   south=-90, north=-60.0,  fonts=16)
-    #
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
+    plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
+                      south=58, north=70.5,  fonts=16, SLP=False, gust=True)
+    plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
+                      south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
+
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
+    plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
+                      south=-90, north=-60.0,  fonts=16)
+
     # proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
     # plot_map_standard(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
     #                   south=60, north=90.0,  fonts=14)

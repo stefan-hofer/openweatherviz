@@ -62,7 +62,7 @@ class Meteogram(object):
         self.ax1 = fig.add_subplot(4, 1, 1)
         ln1 = self.ax1.plot(self.dates, ws, label='Wind Speed')
         plt.fill_between(self.dates, ws, 0)
-        self.ax1.set_xlim(self.start, self.end)
+        # self.ax1.set_xlim(self.start, self.end)
         if not plot_range:
             plot_range = [0, 60, 1]
         plt.ylabel('Wind Speed (knots)', multialignment='center')
@@ -185,8 +185,8 @@ class Meteogram(object):
 
 
 # Download the station data
-station = '01008'
-url, path = url_timeseries(2008,7,25,00,2008,8,1,12,station)
+station = '03065'
+url, path = url_timeseries(2018, 3, 13, 00, 2018, 3, 15, 11, station)
 # yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
@@ -199,7 +199,6 @@ ws = df_synop['ff'].values
 wsmax = df_synop['max_gust'].values
 wd = df_synop['dd'].values
 date = pd.to_datetime(df_synop['time'].values).tolist()
-
 
 
 # ID For Plotting on Meteogram
@@ -215,8 +214,8 @@ data = {'wind_speed': (np.array(ws) * units('knots')),
 
 fig = plt.figure(figsize=(20, 16))
 add_metpy_logo(fig, 250, 180)
-meteogram = Meteogram(fig, data['times'], probe_id)
-meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'])
+meteogram = Meteogram(fig, date, probe_id)
+meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'], plot_range=[0, 100, 1])
 meteogram.plot_thermo(data['air_temperature'], data['dewpoint'], plot_range=[min(df_synop['TD'])-3, max(df_synop['TT'])+3,1])
 meteogram.plot_rh(data['relative_humidity'])
 meteogram.plot_pressure(data['mean_slp'], plot_range=[min(df_synop['SLP'])-5, max(df_synop['SLP'])+5,1])
