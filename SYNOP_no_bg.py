@@ -157,9 +157,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
     # Get the wind components, converting from m/s to knots as will
     # be appropriate for the station plot.
     df['dd'][df['dd'] > 360] = np.nan
-    u, v = wind_components(((df['ff'].values)*units('knots')),
-                               (df['dd'].values * units('deg')
-                                ))
+    u, v = wind_components(df['ff'].values*units('knots'),
+                               df['dd'].values * units('deg'))
     cloud_frac = df['cloud_cover']
     # Change the DPI of the resulting figure. Higher DPI drastically improves
     # look of the text rendering.
