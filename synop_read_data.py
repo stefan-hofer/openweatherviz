@@ -180,6 +180,7 @@ def synop_df(path, timeseries=False):
     df['ff'].loc[df['ff'].str.contains('\D')] = '//'
     ff = pd.to_numeric(df['ff'].replace('//', np.nan))
     (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+    ff = ff.astype('float')
     final_df['ff'] = ff.values
     # ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
     #                     .replace('//', np.nan))).fillna(np.nan)

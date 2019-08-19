@@ -10,8 +10,8 @@ import pandas as pd
 from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
-from metpy.calc import get_wind_components,  reduce_point_density
-from metpy.gridding.gridding_functions import interpolate, remove_nan_observations
+from metpy.calc import wind_components,  reduce_point_density
+from metpy.interpolate import interpolate, remove_nan_observations
 from metpy.plots.wx_symbols import current_weather, current_weather_auto, sky_cover
 from metpy.plots import StationPlot
 from os.path import expanduser
@@ -156,8 +156,9 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
 
     # Get the wind components, converting from m/s to knots as will
     # be appropriate for the station plot.
-    u, v = get_wind_components(((df['ff'].values)*units('knots')),
-                               (df['dd'].values * units.degree
+    df['dd'][df['dd'] > 360] = np.nan
+    u, v = wind_components(((df['ff'].values)*units('knots')),
+                               (df['dd'].values * units('deg')
                                 ))
     cloud_frac = df['cloud_cover']
     # Change the DPI of the resulting figure. Higher DPI drastically improves

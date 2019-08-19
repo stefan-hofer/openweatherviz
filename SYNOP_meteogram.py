@@ -185,8 +185,8 @@ class Meteogram(object):
 
 
 # Download the station data
-station = '03065'
-url, path = url_timeseries(2018, 3, 13, 00, 2018, 3, 15, 11, station)
+station = '04416' #'89606'# '03065'
+url, path = url_timeseries(2019, 7, 27, 00, 2019, 8, 19, 15, station)
 # yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
@@ -196,7 +196,10 @@ pres = df_synop['SLP'].values
 dewpoint = df_synop['TD'].values * units('degC')
 rh = mpcalc.relative_humidity_from_dewpoint(temp, dewpoint) * 100
 ws = df_synop['ff'].values
-wsmax = df_synop['max_gust'].values
+if 'max_gust' in df_synop.columns:
+    wsmax = df_synop['max_gust'].values
+else:
+    pass
 wd = df_synop['dd'].values
 date = pd.to_datetime(df_synop['time'].values).tolist()
 
@@ -212,10 +215,12 @@ data = {'wind_speed': (np.array(ws) * units('knots')),
         'mean_slp': pres * units('hPa'),
         'relative_humidity': np.array(rh), 'times': np.array(date)}
 
+
+
 fig = plt.figure(figsize=(20, 16))
-add_metpy_logo(fig, 250, 180)
+# add_metpy_logo(fig, 250, 180)
 meteogram = Meteogram(fig, date, probe_id)
-meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'], plot_range=[0, 100, 1])
+meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'],plot_range=[0, 100, 1])
 meteogram.plot_thermo(data['air_temperature'], data['dewpoint'], plot_range=[min(df_synop['TD'])-3, max(df_synop['TT'])+3,1])
 meteogram.plot_rh(data['relative_humidity'])
 meteogram.plot_pressure(data['mean_slp'], plot_range=[min(df_synop['SLP'])-5, max(df_synop['SLP'])+5,1])
