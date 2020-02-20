@@ -25,10 +25,12 @@ def synop_df(path, timeseries=False):
 
     # Convert arcmin and sec to degrees
     df_latlon['Lat_mins'] = df_latlon['Lat_mins'].astype(float) / 60
-    df_latlon['Lat_sec'] = df_latlon['Lat_sec'].astype(float) / (60**2)
+    df_latlon['Lat_sec'] = df_latlon['Lat_sec'].astype(
+        float) / (60**2)
 
     df_latlon['Lon_mins'] = df_latlon['Lon_mins'].astype(float) / 60
-    df_latlon['Lon_sec'] = df_latlon['Lon_sec'].astype(float) / (60**2)
+    df_latlon['Lon_sec'] = df_latlon['Lon_sec'].astype(
+        float) / (60**2)
 
     df_latlon['latitude'] = (df_latlon['Lat_deg'].astype(float) + df_latlon['Lat_mins'].
                              astype(float) + df_latlon['Lat_sec'])
@@ -42,12 +44,15 @@ def synop_df(path, timeseries=False):
         return dt.datetime(int(y), int(m), int(d), int(h), int(M))
 
     def load_main(filename):
-        fields = ['ESTACION', 'ANO', 'MES', 'DIA', 'HORA', 'MINUTO', 'PARTE']
+        fields = ['ESTACION', 'ANO', 'MES',
+                  'DIA', 'HORA', 'MINUTO', 'PARTE']
         df = pd.read_csv(filename, usecols=fields)
-        list_one = ['Station', 'Year', 'Month', 'Day', 'Hour', 'Minute', 'Report']
+        list_one = ['Station', 'Year', 'Month',
+                    'Day', 'Hour', 'Minute', 'Report']
         df.columns = list_one
         # Create time columns and make it the index
-        df['time'] = pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
+        df['time'] = pd.to_datetime(
+            df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
         # Fill the missing values
         df.fillna(value=np.nan, inplace=True)
         # df_report.fillna(value=np.nan, inplace=True)
@@ -68,7 +73,8 @@ def synop_df(path, timeseries=False):
 
     # Do some cleaning up of the dataframe
     # only valid station IDs
-    df = df[df['Report'].str.contains("AAXX")]  # drop mobile synop land stations
+    # drop mobile synop land stations
+    df = df[df['Report'].str.contains("AAXX")]
     # df = df[(df['Minute']) >= 40 | (df['Minute'] <= 20)]
     df['Station'] = df['Station'].astype(str)
     df = df[~df['Station'].str.contains('\D')]
@@ -108,15 +114,15 @@ def synop_df(path, timeseries=False):
                                                  [df_climat[y].str.startswith(str(x))])
                 else:
                     (df_climat[list_cols[x-1]][df_climat[y].
-                     str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
-                                                 startswith(str(x))])
+                                               str.startswith(str(x))]) = (df_climat[y][df_climat[y].str.
+                                                                                        startswith(str(x))])
         df_climat.fillna(value='XXXXX', inplace=True)
         # WIP: START
         # Extract the mag gust values 910 = max gust 10 mins prior, 911 max gust hour,
         # 912 - highest mean wind speed
         for x in ['910', '911', '912', '913', '914']:
             for y in range(0, 9):
-                if y is 0:
+                if y == 0:
                     df_climat[x] = (df_climat[df_climat.columns[y]].
                                     loc[df_climat[df_climat.columns[y]].str.startswith(x)])
                 else:
@@ -142,11 +148,13 @@ def synop_df(path, timeseries=False):
     for x in range(1, 10):
         for y in range(0, max_iter):
             if y == 0:
-                df_new['max_gt_100'] = df_new[y][df_new[y].str.startswith(str('00'))]
-                df_new[list1[x-1]] = df_new[y][df_new[y].str.startswith(str(x))]
+                df_new['max_gt_100'] = df_new[y][df_new[y].str.startswith(
+                    str('00'))]
+                df_new[list1[x-1]
+                       ] = df_new[y][df_new[y].str.startswith(str(x))]
             else:
                 df_new[list1[x-1]][df_new[y].str.startswith(str(x))] = (df_new[y][df_new[y].str
-                                                                        .startswith(str(x))])
+                                                                                  .startswith(str(x))])
 
     df_new.fillna(value='XXXXX', inplace=True)
     df_new = df_new.replace(r'^\s*$', 'XXXXX', regex=True)
@@ -163,23 +171,27 @@ def synop_df(path, timeseries=False):
     # Extract cloud cover
     df['clouds'] = df['Nddff'].str[0].fillna('/')
     df['clouds'].loc[df['clouds'].str.contains('\D')] = '/'
-    final_df['cloud_cover'] = df['clouds'].replace('/', 10).astype(int)
+    final_df['cloud_cover'] = df['clouds'].replace(
+        '/', 10).astype(int)
 
     # Retrieve if station is automatic or manned
     df['StationType'] = df['iihVV'].str[1].fillna('/')
     df['StationType'].loc[df['StationType'].str.contains('\D')] = '/'
-    final_df['StationType'] = pd.to_numeric(df['StationType'].replace('/'), np.nan)
+    final_df['StationType'] = pd.to_numeric(
+        df['StationType'].replace('/', np.nan))
     # extract the wind direction and convert to degress
     df['dd'] = df['Nddff'].str[1:3].fillna('//')
     df['dd'].loc[df['dd'].str.contains('\D')] = '//'
-    final_df['dd'] = (pd.to_numeric(df['dd'].replace('//', np.nan))) * 10
+    final_df['dd'] = (pd.to_numeric(
+        df['dd'].replace('//', np.nan))) * 10
     # Identify if wind obs. is in m/s (0,1) or knots (3,4)
     identifier = df['Dat'].str[4]
     # Extract wind speed and check for units. Convert all to knots
     df['ff'] = df['Nddff'].str[3:5].fillna('//')
     df['ff'].loc[df['ff'].str.contains('\D')] = '//'
     ff = pd.to_numeric(df['ff'].replace('//', np.nan))
-    (ff.loc[(identifier == '0') | (identifier == '1').values]) *= units('m/s').to('knots')
+    (ff.loc[(identifier == '0') | (identifier == '1').values]
+     ) *= units('m/s').to('knots')
     ff = ff.astype('float')
     final_df['ff'] = ff.values
     # ff = (pd.to_numeric((df['Nddff'].str[3:5].str.replace(r'(^.*/.*$)', '//'))
@@ -195,9 +207,10 @@ def synop_df(path, timeseries=False):
     df_new['X1'].loc[df_new['X1'].str.len() < 5] = 'XXXXX'
     df_new['X1'] = df_new['X1'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XT'] = df_new['X1'][~df_new['X1'].isin(list_to_drop)]
-    final_df['TT'] = df_new['XT'].loc[df_new['XT'].str[1] == '0'].str[2:].astype(int)/10
+    final_df['TT'] = df_new['XT'].loc[df_new['XT'].str[1]
+                                      == '0'].str[2:].astype(int)/10
     final_df['TT'].loc[df_new['XT'].str[1] == '1'] = (df_new['XT'].loc[df_new['XT']
-                                                      .str[1] == '1'].str[2:5].astype(int)/-10)
+                                                                       .str[1] == '1'].str[2:5].astype(int)/-10)
     # Extract Td and assign + or - sign
     list_to_drop = ['XXXXX', '/////', '20///', '20']
     df_new['X2'].loc[df_new['X2'].str.contains('\D')] = 'XXXXX'
@@ -205,9 +218,10 @@ def synop_df(path, timeseries=False):
     df_new['X2'].loc[df_new['X2'].str.len() < 5] = 'XXXXX'
     df_new['X2'] = df_new['X2'].replace(r'^\s*$', 'XXXXX', regex=True)
     df_new['XTD'] = df_new['X2'][~df_new['X2'].isin(list_to_drop)]
-    final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1] == '0'].str[2:].astype(int)/10
+    final_df['TD'] = df_new['XTD'].loc[df_new['XTD'].str[1]
+                                       == '0'].str[2:].astype(int)/10
     final_df['TD'].loc[df_new['XTD'].str[1] == '1'] = (df_new['XTD'].loc[df_new['XTD']
-                                                       .str[1] == '1'].str[2:5]
+                                                                         .str[1] == '1'].str[2:5]
                                                        .astype(int)/-10)
 
     # Extract the station pressure
@@ -218,7 +232,7 @@ def synop_df(path, timeseries=False):
                       .astype(int) + 10000)/10
     for x in ['9', '8', '7']:
         final_df['PP'].loc[df_new['XP'].str[1] == x] = (df_new['XP'].loc[df_new['XP'].str[1]
-                                                        == x].str[1:].astype(int)/10)
+                                                                         == x].str[1:].astype(int)/10)
 
     # Extract the reduced sea level pressure
     list_to_drop = ['XXXXX', '/////', '30///', '48///']
@@ -228,16 +242,18 @@ def synop_df(path, timeseries=False):
                        .astype(int) + 10000)/10
     for x in ['9', '8', '7']:
         final_df['SLP'].loc[df_new['XSLP'].str[1] == x] = (df_new['XSLP'].loc[df_new['XSLP']
-                                                           .str[1] == x].str[1:]
+                                                                              .str[1] == x].str[1:]
                                                            .astype(int)/10)
 
     # Extract the pressure tendency and assign - or +
     list_to_drop = ['XXXXX', 'XXX', '/////', '5////']
     df_new['X5'] = df_new['X5'].str[2:]
-    df_new['X5'].loc[df_new['X5'].str.contains('/', case=False)] = 'XXX'
+    df_new['X5'].loc[df_new['X5'].str.contains(
+        '/', case=False)] = 'XXX'
     df_new['X5'].loc[df_new['X5'].str.contains('\D')] = 'XXXXX'
     df_new['X5'] = df_new['X5'].replace(r'^\s*$', 'XXX', regex=True)
-    df_new['PT'] = df_new['X5'][~df_new['X5'].isin(list_to_drop)].astype(int)
+    df_new['PT'] = df_new['X5'][~df_new['X5'].isin(
+        list_to_drop)].astype(int)
 
     final_df['Ptendency'] = df_new['PT']
     for x in ['5', '6', '7', '8']:
@@ -254,49 +270,66 @@ def synop_df(path, timeseries=False):
     # Extract current current weather
     list_to_drop = ['XX']
     df_new['Cweather'] = df_new['X7'].str[1:3]
-    df_new['Cweather'].loc[df_new['Cweather'].str.contains('/', case=False)] = 'XX'
-    df_new['Cweather'].loc[df_new['Cweather'].str.contains('\D')] = 'XX'
-    df_new['Cweather'] = df_new['Cweather'].replace(r'^\s*$', 'XX', regex=True)
-    final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(list_to_drop)].astype(int)
-    final_df['ww'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
+    df_new['Cweather'].loc[df_new['Cweather'].str.contains(
+        '/', case=False)] = 'XX'
+    df_new['Cweather'].loc[df_new['Cweather'].str.contains(
+        '\D')] = 'XX'
+    df_new['Cweather'] = df_new['Cweather'].replace(
+        r'^\s*$', 'XX', regex=True)
+    final_df['ww'] = df_new['Cweather'][~df_new['Cweather'].isin(
+        list_to_drop)].astype(int)
+    final_df['ww'] = pd.to_numeric(
+        final_df['ww'], downcast='integer', errors='ignore')
 
     # Extract past weather
     list_to_drop = ['XX']
     df_new['Pweather'] = df_new['X7'].str[3:5]
-    df_new['Pweather'].loc[df_new['Pweather'].str.contains('/', case=False)] = 'XX'
-    df_new['Pweather'].loc[df_new['Pweather'].str.contains('\D')] = 'XX'
-    df_new['Pweather'] = df_new['Pweather'].replace(r'^\s*$', 'XX', regex=True)
-    final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(list_to_drop)].astype(int)
-    final_df['WW'] = pd.to_numeric(final_df['ww'], downcast='integer', errors='ignore')
+    df_new['Pweather'].loc[df_new['Pweather'].str.contains(
+        '/', case=False)] = 'XX'
+    df_new['Pweather'].loc[df_new['Pweather'].str.contains(
+        '\D')] = 'XX'
+    df_new['Pweather'] = df_new['Pweather'].replace(
+        r'^\s*$', 'XX', regex=True)
+    final_df['WW'] = df_new['Pweather'][~df_new['Pweather'].isin(
+        list_to_drop)].astype(int)
+    final_df['WW'] = pd.to_numeric(
+        final_df['ww'], downcast='integer', errors='ignore')
 
     # Only if df_climat exists
     if 'df_climat' in locals():
         # Extract mag gust from df_climat
         list_to_drop = ['XX']
         df_new['max_gust'] = df_climat['911'].str[3:5]
-        df_new['max_gust'].loc[df_new['max_gust'].str.contains('\D')] = 'XX'
-        final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(list_to_drop)].astype(int)
+        df_new['max_gust'].loc[df_new['max_gust'].str.contains(
+            '\D')] = 'XX'
+        final_df['max_gust'] = df_new['max_gust'][~df_new['max_gust'].isin(
+            list_to_drop)].astype(int)
 
         (final_df['max_gust'].loc[(identifier == '0') | (identifier == '1').values]) *= (units('m/s')
-                                                                                        .to('knots'))
+                                                                                         .to('knots'))
         final_df['max_gust'] *= units('knots').to('kph')
 
         # Extract precip data
         df_climat.fillna('XXXXX', inplace=True)
-        df_climat['X6_333'].loc[df_climat['X6_333'].str.contains('//')] == 'XXXXX'
+        df_climat['X6_333'].loc[df_climat['X6_333'].str.contains(
+            '//')] == 'XXXXX'
         list_to_drop = ['XXX', '///']
         df_new['Precip'] = df_climat['X6_333'].str[1:4]
-        df_new['Precip'].loc[df_new['Precip'].str.contains('\D')] = 'XXX'
+        df_new['Precip'].loc[df_new['Precip'].str.contains(
+            '\D')] = 'XXX'
         df_new['Precip_h'] = df_climat['X6_333'].str[4]
 
-        final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(list_to_drop)].astype(int)
-        final_df['Precip'].loc[final_df['Precip'] >= 991] = (final_df['Precip'] - 990) / 10
+        final_df['Precip'] = df_new['Precip'][~df_new['Precip'].isin(
+            list_to_drop)].astype(int)
+        final_df['Precip'].loc[final_df['Precip'] >= 991] = (
+            final_df['Precip'] - 990) / 10
         final_df['Precip'].loc[final_df['Precip'] == 990] = 0.01
 
         hour_list = [6, 12, 18, 24, 1, 2, 3, 9, 15]
         for x in range(0, 9):
             s = 'Precip_' + str(hour_list[x]) + 'h'
-            final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(x+1)]
+            final_df[s] = final_df['Precip'].loc[df_new['Precip_h'] == str(
+                x+1)]
             # print(s)
         final_df['Precip_24h'].loc[df_new['Precip_h'] == '/'] = (final_df['Precip'].
                                                                  loc[df_new['Precip_h'] == '/'])
@@ -306,17 +339,21 @@ def synop_df(path, timeseries=False):
     # Precip_6h Precip_12h Precip_18h Precip_24h Precip_1h Precip_2h Precip_3h Precip_9h
     # Precip_15h
     # Merge with latlon data
-    final_df = final_df.merge(df_latlon, left_on='Station', right_on='Station')
+    final_df = final_df.merge(
+        df_latlon, left_on='Station', right_on='Station')
     final_df['longitude'].loc[final_df['E_or_W'] == 'W'] = (final_df['longitude'].
-                                                            loc[final_df['E_or_W'] == 'W']
+                                                            loc[final_df['E_or_W']
+                                                                == 'W']
                                                             * (-1))
     final_df['latitude'].loc[final_df['N_or_S'] == 'S'] = (final_df['latitude'].
-                                                           loc[final_df['N_or_S'] == 'S']
+                                                           loc[final_df['N_or_S']
+                                                               == 'S']
                                                            * (-1))
     # Add time to the final dataframe
     df_test = df[['Statindex', 'time']]
     if timeseries is False:
-        final_df = final_df.merge(df_test, left_on='Station', right_on='Statindex')
+        final_df = final_df.merge(
+            df_test, left_on='Station', right_on='Statindex')
     else:
         final_df['time'] = df_test['time']
     # Round time to nearest hour

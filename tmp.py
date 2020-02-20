@@ -7,8 +7,8 @@ import matplotlib.patheffects as path_effects
 import matplotlib.path as mpath
 import pandas as pd
 from metpy.units import units
-from metpy.calc import get_wind_components,  reduce_point_density
-from metpy.gridding.gridding_functions import interpolate, remove_nan_observations
+from metpy.calc import wind_components,  reduce_point_density
+from metpy.interpolate import interpolate_to_grid, remove_nan_observations
 from metpy.plots.wx_symbols import current_weather, sky_cover, current_weather_auto
 from metpy.plots import StationPlot
 from os.path import expanduser
@@ -58,11 +58,12 @@ def create_slp_grid(proj, df):
     lat = df['latitude'].values
     xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
 
-    x_masked, y_masked, pres = remove_nan_observations(xp, yp, df['SLP'].values)
-    slpgridx, slpgridy, slp = interpolate(x_masked,
-                                          y_masked, pres, interp_type='cressman',
-                                          minimum_neighbors=1,
-                                          search_radius=400000, hres=100000)
+    x_masked, y_masked, pres = remove_nan_observations(
+        xp, yp, df['SLP'].values)
+    slpgridx, slpgridy, slp = interpolate_to_grid(x_masked,
+                                                  y_masked, pres, interp_type='cressman',
+                                                  minimum_neighbors=1,
+                                                  search_radius=400000, hres=100000)
 
     return slpgridx, slpgridy, slp
 
@@ -137,7 +138,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                                   color=cmap(norm(list_ex[j])))
                 try:
                     Temp.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                                          foreground='black'), path_effects.Normal()])
+                                                               foreground='black'), path_effects.Normal()])
                 except AttributeError:
                     pass
                 j += 1
@@ -151,7 +152,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                                           color=cmap(norm(x+0.5)))
         try:
             Temp.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                                  foreground='black'), path_effects.Normal()])
+                                                       foreground='black'), path_effects.Normal()])
         except AttributeError:
             pass
         print('x={} done correctly '.format(x))
@@ -164,9 +165,9 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                               df['latitude'].values, clip_on=True,
                               transform=ccrs.PlateCarree(), fontsize=fonts)
     try:
-        u, v = get_wind_components(((df['ff'].values) * units('knots')),
-                                   (df['dd'].values * units.degree
-                                    ))
+        u, v = wind_components(((df['ff'].values) * units('knots')),
+                               (df['dd'].values * units.degree
+                                ))
         cloud_frac = df['cloud_cover']
         if area != 'Arctic':
             stationplot.plot_barb(u, v, zorder=1000, linewidth=2)
@@ -179,7 +180,8 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                 # mask all the unmanned stations
                 wx['ww'].loc[wx['StationType'] > 3] = np.nan
                 wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
-                stationplot.plot_symbol('W', wx2, current_weather, zorder=2000)
+                stationplot.plot_symbol(
+                    'W', wx2, current_weather, zorder=2000)
             else:
                 # mask all the manned stations
                 wx['ww'].loc[(wx['StationType'] <= 3)] = np.nan
@@ -187,22 +189,28 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
                 # =7 is an empty symbol!
                 wx['ww'].loc[wx['ww'] <= 9] = 7
                 wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
-                stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=2000)
+                stationplot.plot_symbol(
+                    'W', wx2, current_weather_auto, zorder=2000)
         # print(u, v)
     except (ValueError, TypeError) as error:
         pass
 
     if SLP is True:
-        lon = df['longitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
-        lat = df['latitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
-        xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
-        sea_levelp = df['SLP'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
-        x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
-        slpgridx, slpgridy, slp = interpolate(x_masked,
-                                              y_masked, pres, interp_type='cressman',
-                                              search_radius=400000, rbf_func='quintic',
-                                              minimum_neighbors=1, hres=100000,
-                                              rbf_smooth=100000)
+        lon = df['longitude'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        lat = df['latitude'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        xp, yp, _ = proj.transform_points(
+            ccrs.PlateCarree(), lon, lat).T
+        sea_levelp = df['SLP'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
+        x_masked, y_masked, pres = remove_nan_observations(
+            xp, yp, sea_levelp.values)
+        slpgridx, slpgridy, slp = interpolate_to_grid(x_masked,
+                                                      y_masked, pres, interp_type='cressman',
+                                                      search_radius=400000, rbf_func='quintic',
+                                                      minimum_neighbors=1, hres=100000,
+                                                      rbf_smooth=100000)
         Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(
                                 west, east, south, north), levels=list(range(950, 1050, 10)))
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
@@ -210,7 +218,7 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
         Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--',
                            extent=(west, east, south, north),
                            levels=[x for x in range(950, 1050, 1) if x not in list(range(950,
-                                   1050, 10))])
+                                                                                         1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
 
     # stationplot.plot_text((2, 0), df['Station'])
@@ -227,29 +235,62 @@ def plot_map_temperature(proj, point_locs, df_t, area='EU', west=-5.5, east=32,
 
 
 if __name__ == '__main__':
+
     attempts = 0
     success = False
-    while attempts <= 5 and not success:
-        try:
-            url, path = url_last_hour()
-            download_and_save(path, url)
-            df_synop, df_climat = synop_df(path)
-            success = True
-        except ValueError:
-            attempts += 1
-            print('Not the right amount of columns, trying for the {} time'
-                  .format(attempts))
+    text = '''
+    This program can either plot the SYNOP observations for the last hour or for
+    any given date.
+    '''
+    print(text)
+    inp = input(
+        'Do you want to plot observations from the last hour? (y/n): ')
+    if inp == 'Y' or inp == 'y':
+        while attempts <= 5 and not success:
+            try:
+                url, path = url_last_hour()
+                download_and_save(path, url)
+                df_synop, df_climat = synop_df(path)
+                success = True
+            except ValueError:
+                attempts += 1
+                print('Not the right amount of columns, trying for the {} time'
+                      .format(attempts))
+                time.sleep(2)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 110000, 'Antarctica')
+    else:
+        inp = input(
+            'For which date do you want to plot the SYNOP observations? (YYYY/MM/DD/HH): ')
+        inp = inp.split('/')
+        # Remove leading zeros, e.g. MM = 05 for May
+        inp = [int(x.lstrip('0')) for x in inp]
+
+        while attempts <= 5 and not success:
+            try:
+                url, path = url_any_hour(
+                    year=inp[0], month=inp[1], day=inp[2], hour=inp[3])
+                download_and_save(path, url)
+                df_synop, df_climat = synop_df(path)
+                success = True
+            except ValueError:
+                attempts += 1
+                print('Not the right amount of columns, trying for the {} time'
+                      .format(attempts))
+                time.sleep(2)
+
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 110000, 'Antarctica')
     plot_map_temperature(proj, point_locs, df_synop_red, area='Antarctica', west=-180,
                          east=180, south=-90, north=-60.0,  fonts=16, SLP=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 180000, 'Arctic')
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 60000, 'Arctic')
     plot_map_temperature(proj, point_locs, df_synop_red, area='Arctic', west=-180, east=180,
                          south=60, north=90.0,  fonts=19)
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    proj, point_locs, df_synop_red = reduce_density(df_synop, 35000)
     plot_map_temperature(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
-                         south=50.1, north=58.4,  fonts=17, SLP=True)
+                         south=50.1, north=58.4,  fonts=19, SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 150000)
-    plot_map_temperature(proj, point_locs, df_synop_red, fonts=17, SLP=True)
+    plot_map_temperature(
+        proj, point_locs, df_synop_red, fonts=17, SLP=True)

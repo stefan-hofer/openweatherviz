@@ -11,7 +11,7 @@ from metpy.units import units
 from siphon.catalog import TDSCatalog
 from siphon.ncss import NCSS
 from metpy.calc import wind_components,  reduce_point_density
-from metpy.interpolate import interpolate, remove_nan_observations
+from metpy.interpolate import interpolate_to_grid, remove_nan_observations
 from metpy.plots.wx_symbols import current_weather, current_weather_auto, sky_cover
 from metpy.plots import StationPlot
 from os.path import expanduser
@@ -77,7 +77,7 @@ def get_data(ncss, query, density=50000.):
 
     df = df.replace(-99999, np.nan)
     df = df.dropna(how='any', subset=['wind_from_direction', 'wind_speed',
-                   'dew_point_temperature'])
+                                      'dew_point_temperature'])
     df['cloud_area_fraction'] = (df['cloud_area_fraction'] * 8)
     df['cloud_area_fraction'] = df['cloud_area_fraction'].replace(np.nan, 10) \
         .astype(int)
@@ -118,7 +118,7 @@ def reduce_density(df, dens, projection='EU'):
 
 def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
                       south=35, north=62, fonts=14, path=None, SLP=False, gust=False):
-    if path is None:
+    if path == None:
         # set up the paths and test for existence
         path = expanduser('~') + '/Documents/Metar_plots'
         try:
@@ -158,7 +158,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
     # be appropriate for the station plot.
     df['dd'][df['dd'] > 360] = np.nan
     u, v = wind_components(df['ff'].values*units('knots'),
-                               df['dd'].values * units('deg'))
+                           df['dd'].values * units('deg'))
     cloud_frac = df['cloud_cover']
     # Change the DPI of the resulting figure. Higher DPI drastically improves
     # look of the text rendering.
@@ -171,9 +171,11 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
     #                                             alpha=0.5)
     # ax.coastlines(resolution='10m', zorder=0, color='black')
     # ax.add_feature(feat.LAND)
-    ax.add_feature(feat.COASTLINE.with_scale('10m'), zorder=2, edgecolor='black')
+    ax.add_feature(feat.COASTLINE.with_scale(
+        '10m'), zorder=2, edgecolor='black')
     ax.add_feature(feat.OCEAN.with_scale('50m'), zorder=0)
-    ax.add_feature(feat.STATES.with_scale('10m'), zorder=1, facecolor='white', edgecolor='#5e819d')
+    ax.add_feature(feat.STATES.with_scale('10m'), zorder=1,
+                   facecolor='white', edgecolor='#5e819d')
     # ax.add_feature(cartopy.feature.OCEAN, zorder=0)
     # Set plot bounds
 
@@ -190,12 +192,12 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
     Td = stationplot.plot_parameter('SW', df['TD'],
                                     color='#01ff07')
 
-    if gust is True:
+    if gust == True:
         maxff = stationplot.plot_parameter('SE', df['max_gust'],
                                            color='#cb416b', fontweight='bold',
                                            zorder=3)
         maxff.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                               foreground='black'), path_effects.Normal()])
+                                                    foreground='black'), path_effects.Normal()])
     # fontweight = 'bold'
     # More complex ex. uses custom formatter to control how sea-level pressure
     # values are plotted. This uses the standard trailing 3-digits of
@@ -208,11 +210,11 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
                                        color="#a2cffe")
         for x in [Temp, Td, p]:
             x.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                               foreground='black'), path_effects.Normal()])
+                                                    foreground='black'), path_effects.Normal()])
     else:
         for x in [Temp, Td]:
             x.set_path_effects([path_effects.Stroke(linewidth=1.5,
-                               foreground='black'), path_effects.Normal()])
+                                                    foreground='black'), path_effects.Normal()])
 
     # Add wind barbs
     stationplot.plot_barb(u, v, zorder=3, linewidth=2)
@@ -228,7 +230,8 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
             # mask all the unmanned stations
             wx['ww'].loc[wx['StationType'] > 3] = np.nan
             wx2 = wx['ww'].fillna(00).astype(int).values.tolist()
-            stationplot.plot_symbol('W', wx2, current_weather, zorder=4)
+            stationplot.plot_symbol(
+                'W', wx2, current_weather, zorder=4)
         else:
             # mask all the manned stations
             wx['ww'].loc[(wx['StationType'] <= 3)] = np.nan
@@ -236,18 +239,24 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
             # =7 is an empty symbol!
             wx['ww'].loc[wx['ww'] <= 9] = 7
             wx2 = wx['ww'].fillna(7).astype(int).values.tolist()
-            stationplot.plot_symbol('W', wx2, current_weather_auto, zorder=4)
-    if SLP is True:
-        lon = df['longitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
-        lat = df['latitude'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
-        xp, yp, _ = proj.transform_points(ccrs.PlateCarree(), lon, lat).T
-        sea_levelp = df['SLP'].loc[(df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
-        x_masked, y_masked, pres = remove_nan_observations(xp, yp, sea_levelp.values)
-        slpgridx, slpgridy, slp = interpolate(x_masked,
-                                              y_masked, pres, interp_type='cressman',
-                                              search_radius=400000, rbf_func='quintic',
-                                              minimum_neighbors=1, hres=100000,
-                                              rbf_smooth=100000)
+            stationplot.plot_symbol(
+                'W', wx2, current_weather_auto, zorder=4)
+    if SLP == True:
+        lon = df['longitude'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        lat = df['latitude'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)].values
+        xp, yp, _ = proj.transform_points(
+            ccrs.PlateCarree(), lon, lat).T
+        sea_levelp = df['SLP'].loc[(
+            df.PressureDefId == 'mean sea level') & (df.Hp <= 750)]
+        x_masked, y_masked, pres = remove_nan_observations(
+            xp, yp, sea_levelp.values)
+        slpgridx, slpgridy, slp = interpolate_to_grid(x_masked,
+                                                      y_masked, pres, interp_type='cressman',
+                                                      search_radius=400000, rbf_func='quintic',
+                                                      minimum_neighbors=1, hres=100000,
+                                                      rbf_smooth=100000)
         Splot_main = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=2, extent=(
                                 west, east, south, north), levels=list(range(950, 1050, 10)))
         plt.clabel(Splot_main, inline=1, fontsize=12, fmt='%i')
@@ -255,7 +264,7 @@ def plot_map_standard(proj, point_locs, df_t, area='EU', west=-9.5, east=28,
         Splot = ax.contour(slpgridx, slpgridy, slp, colors='k', linewidths=1, linestyles='--',
                            extent=(west, east, south, north),
                            levels=[x for x in range(950, 1050, 1) if x not in list(range(950,
-                                   1050, 10))])
+                                                                                         1050, 10))])
         plt.clabel(Splot, inline=1, fontsize=10, fmt='%i')
 
     # stationplot.plot_text((2, 0), df['Station'])
@@ -279,8 +288,9 @@ if __name__ == '__main__':
     any given date.
     '''
     print(text)
-    inp = input('Do you want to plot observations from the last hour? (y/n): ')
-    if inp is 'Y' or inp is 'y':
+    inp = input(
+        'Do you want to plot observations from the last hour? (y/n): ')
+    if inp == 'Y' or inp == 'y':
         while attempts <= 5 and not success:
             try:
                 url, path = url_last_hour()
@@ -294,14 +304,16 @@ if __name__ == '__main__':
                 time.sleep(2)
 
     else:
-        inp = input('For which date do you want to plot the SYNOP observations? (YYYY/MM/DD/HH): ')
+        inp = input(
+            'For which date do you want to plot the SYNOP observations? (YYYY/MM/DD/HH): ')
         inp = inp.split('/')
         # Remove leading zeros, e.g. MM = 05 for May
         inp = [int(x.lstrip('0')) for x in inp]
 
         while attempts <= 5 and not success:
             try:
-                url, path = url_any_hour(year=inp[0], month=inp[1], day=inp[2], hour=inp[3])
+                url, path = url_any_hour(
+                    year=inp[0], month=inp[1], day=inp[2], hour=inp[3])
                 download_and_save(path, url)
                 df_synop, df_climat = synop_df(path)
                 success = True
@@ -316,7 +328,8 @@ if __name__ == '__main__':
     # download_and_save(path, url)
     # df_synop = synop_df(path)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000, 'SVA')
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 30000, 'SVA')
     plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
                       south=75, north=81.5,  fonts=16, SLP=True, gust=True)
 
@@ -329,15 +342,18 @@ if __name__ == '__main__':
                       south=45.9, north=49.4, fonts=12, SLP=True, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(df_synop, 160000)
-    plot_map_standard(proj, point_locs, df_synop_red, area='EU', SLP=True)
+    plot_map_standard(proj, point_locs, df_synop_red,
+                      area='EU', SLP=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 60000, 'GR')
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 60000, 'GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                       south=58, north=70.5,  fonts=16, SLP=False, gust=True)
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
                       south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 90000, 'Antarctica')
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 90000, 'Antarctica')
     plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
                       south=-90, north=-60.0,  fonts=16)
 
