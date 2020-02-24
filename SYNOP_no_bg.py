@@ -91,7 +91,9 @@ def get_data(ncss, query, density=50000.):
     return df
 
 
-def reduce_density(df, dens, projection='EU'):
+def reduce_density(df, dens, south=-90, north=90, east=180, west=-180, projection='EU'):
+    df_small = df[(df.latitude >= south) & (df.latitude <= north) & (
+        df.longitude <= east) & (df.longitude >= west)]
     if (projection == 'GR') or (projection == 'Arctic'):
         proj = ccrs.LambertConformal(central_longitude=-35,
                                      central_latitude=65,
@@ -107,9 +109,9 @@ def reduce_density(df, dens, projection='EU'):
     # Use the cartopy map projection to transform station locations to the map
     # and then refine the number of stations plotted by setting a 300km radius
     point_locs = proj.transform_points(ccrs.PlateCarree(),
-                                       df['longitude'].values,
-                                       df['latitude'].values)
-    df = df[reduce_point_density(point_locs, dens)]
+                                       df_small['longitude'].values,
+                                       df_small['latitude'].values)
+    df = df_small[reduce_point_density(point_locs, dens)]
     if projection == 'Arctic':
         proj = ccrs.NorthPolarStereo()
 
@@ -327,33 +329,35 @@ if __name__ == '__main__':
     # url, path = url_any_hour(2007, 1, 18, 6)
     # download_and_save(path, url)
     # df_synop = synop_df(path)
-
     proj, point_locs, df_synop_red = reduce_density(
-        df_synop, 30000, 'SVA')
+        df_synop, 20000, south=75, north=82, east=50, west=-50, projection='SVA')
     plot_map_standard(proj, point_locs, df_synop_red, area='SVA', west=4, east=36,
                       south=75, north=81.5,  fonts=16, SLP=True, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 35000)
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 35000, south=49, north=61, east=30, west=-20)
     plot_map_standard(proj, point_locs, df_synop_red, area='UK', west=-10.1, east=1.8,
                       south=50.1, north=58.4,  fonts=11, SLP=True, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 30000)
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 30000, south=45.5, north=50, east=60, west=0)
     plot_map_standard(proj, point_locs, df_synop_red, area='AT', west=8.9, east=17.42,
                       south=45.9, north=49.4, fonts=12, SLP=True, gust=True)
 
-    proj, point_locs, df_synop_red = reduce_density(df_synop, 160000)
+    proj, point_locs, df_synop_red = reduce_density(
+        df_synop, 160000, south=30, north=65, east=50, west=-50)
     plot_map_standard(proj, point_locs, df_synop_red,
                       area='EU', SLP=True)
 
     proj, point_locs, df_synop_red = reduce_density(
-        df_synop, 60000, 'GR')
+        df_synop, 60000, south=50, north=85, east=50, west=-80, projection='GR')
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_S', west=-58, east=-23,
                       south=58, north=70.5,  fonts=16, SLP=False, gust=True)
     plot_map_standard(proj, point_locs, df_synop_red, area='GR_N', west=-64, east=-18,
                       south=70.5, north=84.5,  fonts=16, SLP=False, gust=True)
 
     proj, point_locs, df_synop_red = reduce_density(
-        df_synop, 90000, 'Antarctica')
+        df_synop, 120000, south=-90, north=-50, east=180, west=-180, projection='Antarctica')
     plot_map_standard(proj, point_locs, df_synop_red, area='Antarctica', west=-180, east=180,
                       south=-90, north=-60.0,  fonts=16)
 

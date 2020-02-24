@@ -47,7 +47,8 @@ class Meteogram(object):
         self.axis_num = 0
         self.dates = mpl.dates.date2num(dates)
         self.time = time.strftime('%Y-%m-%d %H:%M UTC')
-        self.title = 'Latest Ob Time: {0}\nProbe ID: {1}'.format(self.time, probeid)
+        self.title = 'Latest Ob Time: {0}\nProbe ID: {1}'.format(
+            self.time, probeid)
 
     def plot_winds(self, ws, wd, wsmax, plot_range=None):
         """
@@ -67,7 +68,8 @@ class Meteogram(object):
             plot_range = [0, 60, 1]
         plt.ylabel('Wind Speed (knots)', multialignment='center')
         self.ax1.set_ylim(plot_range[0], plot_range[1], plot_range[2])
-        plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
+        plt.grid(b=True, which='major', axis='y',
+                 color='k', linestyle='--', linewidth=0.5)
         ln2 = self.ax1.plot(self.dates,
                             wsmax,
                             '.r',
@@ -79,12 +81,14 @@ class Meteogram(object):
                        '.k',
                        linewidth=0.5,
                        label='Wind Direction')
-        plt.ylabel('Wind\nDirection\n(degrees)', multialignment='center')
+        plt.ylabel('Wind\nDirection\n(degrees)',
+                   multialignment='center')
         plt.ylim(0, 360)
         plt.yticks(np.arange(45, 405, 90), ['NE', 'SE', 'SW', 'NW'])
         lns = ln1 + ln2 + ln3
         labs = [l.get_label() for l in lns]
-        plt.gca().xaxis.set_major_formatter(mpl.dates.DateFormatter('%d/%H UTC'))
+        plt.gca().xaxis.set_major_formatter(
+            mpl.dates.DateFormatter('%d/%H UTC'))
         ax7.legend(lns, labs, loc='upper center',
                    bbox_to_anchor=(0.5, 1.2), ncol=3, prop={'size': 12})
 
@@ -110,7 +114,8 @@ class Meteogram(object):
                          color='r')
         plt.setp(self.ax2.get_xticklabels(), visible=True)
         plt.ylabel('Temperature\n(C)', multialignment='center')
-        plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
+        plt.grid(b=True, which='major', axis='y',
+                 color='k', linestyle='--', linewidth=0.5)
         self.ax2.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         ln5 = self.ax2.plot(self.dates,
                             td,
@@ -125,7 +130,8 @@ class Meteogram(object):
         ax_twin.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         lns = ln4 + ln5
         labs = [l.get_label() for l in lns]
-        plt.gca().xaxis.set_major_formatter(mpl.dates.DateFormatter('%d/%H UTC'))
+        plt.gca().xaxis.set_major_formatter(
+            mpl.dates.DateFormatter('%d/%H UTC'))
 
         self.ax2.legend(lns, labs, loc='upper center',
                         bbox_to_anchor=(0.5, 1.2), ncol=2, prop={'size': 12})
@@ -145,13 +151,16 @@ class Meteogram(object):
                       rh,
                       'g-',
                       label='Relative Humidity')
-        self.ax3.legend(loc='upper center', bbox_to_anchor=(0.5, 1.22), prop={'size': 12})
+        self.ax3.legend(loc='upper center', bbox_to_anchor=(
+            0.5, 1.22), prop={'size': 12})
         plt.setp(self.ax3.get_xticklabels(), visible=True)
-        plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
+        plt.grid(b=True, which='major', axis='y',
+                 color='k', linestyle='--', linewidth=0.5)
         self.ax3.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         plt.fill_between(self.dates, rh, plt.ylim()[0], color='g')
         plt.ylabel('Relative Humidity\n(%)', multialignment='center')
-        plt.gca().xaxis.set_major_formatter(mpl.dates.DateFormatter('%d/%H UTC'))
+        plt.gca().xaxis.set_major_formatter(
+            mpl.dates.DateFormatter('%d/%H UTC'))
         axtwin = self.ax3.twinx()
         axtwin.set_ylim(plot_range[0], plot_range[1], plot_range[2])
 
@@ -170,14 +179,18 @@ class Meteogram(object):
                       p,
                       'm',
                       label='Mean Sea Level Pressure')
-        plt.ylabel('Mean Sea\nLevel Pressure\n(mb)', multialignment='center')
+        plt.ylabel('Mean Sea\nLevel Pressure\n(mb)',
+                   multialignment='center')
         plt.ylim(plot_range[0], plot_range[1], plot_range[2])
         axtwin = self.ax4.twinx()
         axtwin.set_ylim(plot_range[0], plot_range[1], plot_range[2])
         plt.fill_between(self.dates, p, plt.ylim()[0], color='m')
-        plt.gca().xaxis.set_major_formatter(mpl.dates.DateFormatter('%d/%H UTC'))
-        self.ax4.legend(loc='upper center', bbox_to_anchor=(0.5, 1.2), prop={'size': 12})
-        plt.grid(b=True, which='major', axis='y', color='k', linestyle='--', linewidth=0.5)
+        plt.gca().xaxis.set_major_formatter(
+            mpl.dates.DateFormatter('%d/%H UTC'))
+        self.ax4.legend(loc='upper center', bbox_to_anchor=(
+            0.5, 1.2), prop={'size': 12})
+        plt.grid(b=True, which='major', axis='y',
+                 color='k', linestyle='--', linewidth=0.5)
         plt.setp(self.ax4.get_xticklabels(), visible=True)
         # OTHER OPTIONAL AXES TO PLOT
         # plot_irradiance
@@ -185,8 +198,8 @@ class Meteogram(object):
 
 
 # Download the station data
-station = '04416' #'89606'# '03065'
-url, path = url_timeseries(2019, 7, 27, 00, 2019, 8, 19, 15, station)
+station = '04416'  # '89606'# '03065'
+url, path = url_timeseries(2020, 2, 18, 00, 2020, 2, 24, 10, station)
 # yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
@@ -216,13 +229,15 @@ data = {'wind_speed': (np.array(ws) * units('knots')),
         'relative_humidity': np.array(rh), 'times': np.array(date)}
 
 
-
 fig = plt.figure(figsize=(20, 16))
 # add_metpy_logo(fig, 250, 180)
 meteogram = Meteogram(fig, date, probe_id)
-meteogram.plot_winds(data['wind_speed'], data['wind_direction'], data['wind_speed_max'],plot_range=[0, 100, 1])
-meteogram.plot_thermo(data['air_temperature'], data['dewpoint'], plot_range=[min(df_synop['TD'])-3, max(df_synop['TT'])+3,1])
+meteogram.plot_winds(data['wind_speed'], data['wind_direction'],
+                     data['wind_speed_max'], plot_range=[0, 100, 1])
+meteogram.plot_thermo(data['air_temperature'], data['dewpoint'], plot_range=[
+                      min(df_synop['TD'])-3, max(df_synop['TT'])+3, 1])
 meteogram.plot_rh(data['relative_humidity'])
-meteogram.plot_pressure(data['mean_slp'], plot_range=[min(df_synop['SLP'])-5, max(df_synop['SLP'])+5,1])
+meteogram.plot_pressure(data['mean_slp'], plot_range=[
+                        min(df_synop['SLP'])-5, max(df_synop['SLP'])+5, 1])
 fig.subplots_adjust(hspace=0.5)
 plt.show()
