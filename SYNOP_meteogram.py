@@ -199,7 +199,7 @@ class Meteogram(object):
 
 # Download the station data
 station = '04416'  # '89606'# '03065'
-url, path = url_timeseries(2020, 2, 18, 00, 2020, 2, 24, 10, station)
+url, path = url_timeseries(2019, 12, 1, 00, 2020, 2, 26, 12, station)
 # yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)
