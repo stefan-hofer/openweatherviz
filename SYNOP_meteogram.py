@@ -198,8 +198,8 @@ class Meteogram(object):
 
 
 # Download the station data
-station = '04416'  # '89606'# '03065'
-url, path = url_timeseries(2019, 12, 1, 00, 2020, 2, 26, 12, station)
+station = '04360' #'04416'  # '89606'# '03065' #04201
+url, path = url_timeseries(2020, 4, 20, 00, 2020, 4, 27, 10, station)
 # yields an error (many not a time entries)
 download_and_save(path, url)
 df_synop, df_climat = synop_df(path, timeseries=True)

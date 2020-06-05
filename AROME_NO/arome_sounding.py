@@ -9,7 +9,7 @@ from metpy.interpolate import cross_section
 
 forecast_in_hours = 12
 
-ini_time = '09'
+ini_time = '06'
 
 # datetime object containing current date and time
 now = datetime.now()
