@@ -1,8 +1,9 @@
-*.html
 *.ipynb_checkpoints
 *.o
 *.pyc
 *.py~
 *.db
 *.json
+*.png
+*.csv
 
