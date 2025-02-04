@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; }
+        .temp-label {
+            font-weight: bold; /* Bold text */
+            font-size: 14px; /* Font size */
+            text-align: center; /* Center the text */
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const temperatureData = [
+        { lat: 37.7749, lon: -122.4194, temp: 15 }, // San Francisco
+        { lat: 40.7128, lon: -74.0060, temp: 10 },  // New York
+        { lat: 34.0522, lon: -118.2437, temp: 20 }, // Los Angeles
+        { lat: 51.5074, lon: -0.1278, temp: 5 },    // London
+        { lat: -33.4489, lon: -70.6693, temp: 25 }  // Santiago
+    ];
+
+    function getColor(temp) {
+        if (temp <= 0) return 'blue'; // Freezing
+        if (temp <= 15) return 'green'; // Cool
+        if (temp <= 25) return 'orange'; // Warm
+        return 'red'; // Hot
+    }
+
+    temperatureData.forEach(data => {
+        const color = getColor(data.temp);
+        
+        // Create a custom div icon for the temperature label
+        const tempLabel = L.divIcon({
+            className: 'temp-label',
+            html: `<span style="color: ${color};">${data.temp}°</span>`,
+            iconSize: [40, 20] // Adjust size as necessary
+        });
+
+        // Add the label to the map at the specified latitude and longitude
+        L.marker([data.lat, data.lon], { icon: tempLabel }).addTo(map);
+    });
+</script>
+
+</body>
+</html>
+
